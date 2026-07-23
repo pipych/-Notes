@@ -44,7 +44,7 @@
       overflow-x: hidden;
     }
 
-    /* Floating Header */
+    /* Header */
     .header {
       display: flex;
       align-items: center;
@@ -67,7 +67,7 @@
       border: 1px solid rgba(255, 179, 64, 0.2);
     }
 
-    /* Floating Search Bar */
+    /* Search Bar */
     .search-box {
       background: var(--bg-card);
       border: var(--border-subtle);
@@ -297,11 +297,11 @@
   </div>
 
   <script>
-    // Настройки Supabase (Вставь свои публичные данные из Supabase Settings -> API)
-    const SUPABASE_URL = "ВСТАВЬ_СВОЙ_SUPABASE_URL";
-    const SUPABASE_ANON_KEY = "ВСТАВЬ_СВОЙ_SUPABASE_ANON_KEY";
-    
-    const supabase = supabaseClient.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let supabase = null;
+    let currentUser = null;
+    let notes = [];
+    let currentNoteId = null;
+    let autoSaveTimer = null;
 
     const tg = window.Telegram?.WebApp;
     if (tg) {
@@ -309,12 +309,6 @@
       tg.expand();
     }
 
-    let currentUser = null;
-    let notes = [];
-    let currentNoteId = null;
-    let autoSaveTimer = null;
-
-    // Тактильная отдача для элементов Telegram
     function triggerHaptic(type = 'impact', style = 'light') {
       if (tg?.HapticFeedback) {
         if (type === 'impact') tg.HapticFeedback.impactOccurred(style);
@@ -323,11 +317,18 @@
     }
 
     async function initApp() {
-      const initData = tg?.initData;
+      try {
+        const configRes = await fetch('/api/config');
+        const config = await configRes.json();
+        supabase = supabaseClient.createClient(config.supabaseUrl, config.supabaseAnonKey);
+      } catch (e) {
+        console.error("Ошибка загрузки конфигурации", e);
+        return;
+      }
 
+      const initData = tg?.initData;
       if (initData) {
         try {
-          // Обращение к относительной папке Vercel API
           const res = await fetch('/api/telegram-auth', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -336,11 +337,10 @@
           const data = await res.json();
           if (data.user) currentUser = data.user;
         } catch (e) {
-          console.error("Ошибка авторизации Telegram, переход в гостевой режим", e);
+          console.error("Ошибка авторизации TG, переход в гостевой режим", e);
         }
       }
 
-      // Если зашли просто через браузер или произошел сбой TG
       if (!currentUser) {
         document.getElementById('userBadge').style.display = 'block';
         let localGuestId = sessionStorage.getItem('guest_id');
