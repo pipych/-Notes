@@ -9,11 +9,10 @@
   <style>
     :root {
       --bg-app: #08080a;
-      --glass-bg: rgba(255, 255, 255, 0.07);
-      --glass-bg-hover: rgba(255, 255, 255, 0.12);
-      --glass-border: 1px solid rgba(255, 255, 255, 0.12);
+      --card-bg: #16161c;
+      --card-bg-active: #22222a;
+      --glass-border: 1px solid rgba(255, 255, 255, 0.1);
       --glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-      --glass-highlight: inset 0 1px 1px 0 rgba(255, 255, 255, 0.18);
       
       --text-main: #ededed;
       --text-muted: #8e8e93;
@@ -75,18 +74,17 @@
       font-size: 11px;
       padding: 6px 14px;
       border-radius: var(--radius-pill);
-      background: var(--glass-bg);
+      background: rgba(255, 255, 255, 0.07);
       border: var(--glass-border);
-      box-shadow: var(--glass-highlight);
       color: var(--text-muted);
       margin-bottom: 16px;
       word-break: break-all;
     }
 
     .search-box {
-      background: var(--glass-bg);
+      background: rgba(255, 255, 255, 0.07);
       border: var(--glass-border);
-      box-shadow: var(--glass-shadow), var(--glass-highlight);
+      box-shadow: var(--glass-shadow);
       border-radius: var(--radius-pill);
       padding: 12px 18px;
       margin-bottom: 20px;
@@ -127,24 +125,24 @@
       align-items: center;
       justify-content: center;
       color: #ffffff;
-      font-weight: 600;
     }
 
     .note-card {
       position: relative;
-      background: var(--glass-bg);
+      background: var(--card-bg);
       border: var(--glass-border);
-      box-shadow: var(--glass-shadow), var(--glass-highlight);
+      box-shadow: var(--glass-shadow);
       border-radius: var(--radius-card);
       padding: 18px 20px;
       cursor: pointer;
       touch-action: pan-y;
       transition: background 0.15s ease;
       will-change: transform;
+      z-index: 2;
     }
 
     .note-card:active {
-      background: var(--glass-bg-hover);
+      background: var(--card-bg-active);
     }
 
     .note-card-title {
@@ -228,9 +226,8 @@
       width: 42px;
       height: 42px;
       border-radius: 50%;
-      background: var(--glass-bg);
+      background: rgba(255, 255, 255, 0.07);
       border: var(--glass-border);
-      box-shadow: var(--glass-highlight);
       color: var(--text-main);
       display: flex;
       align-items: center;
@@ -242,7 +239,7 @@
     }
 
     .btn-icon:active {
-      background: var(--glass-bg-hover);
+      background: rgba(255, 255, 255, 0.12);
       transform: scale(0.92);
     }
 
@@ -464,7 +461,6 @@
           <div class="note-card-date">${dateStr}</div>
         `;
 
-        // Swipe logic
         let startX = 0;
         let currentTranslate = 0;
         let isDragging = false;
@@ -503,7 +499,6 @@
           currentTranslate = 0;
         });
 
-        // Click to open editor if not swiping significantly
         let clickStartX = 0;
         card.addEventListener('pointerdown', (e) => { clickStartX = e.clientX; });
         card.addEventListener('click', (e) => {
