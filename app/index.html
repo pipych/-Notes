@@ -13,10 +13,8 @@
       --bg-app: #0d0d0f;
       --bg-card: #18181c;
       --bg-card-hover: #222228;
-      --bg-input: #121215;
       --text-main: #ededed;
       --text-muted: #8e8e93;
-      --accent: #2c2c30;
       --danger: #ff453a;
       --radius-card: 24px;
       --radius-pill: 9999px;
@@ -152,19 +150,14 @@
       z-index: 50;
     }
 
-    /* Надежный модальный режим без translateY */
     .editor-screen {
       position: fixed;
       inset: 0;
       background: var(--bg-app);
-      z-index: 1000;
+      z-index: 9999;
       padding: calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 20px) 16px;
       display: none;
       flex-direction: column;
-    }
-
-    .editor-screen.active {
-      display: flex !important;
     }
 
     .editor-topbar {
@@ -240,16 +233,16 @@
 
   <div id="notesList" class="notes-list"></div>
 
-  <button class="btn-float" onclick="openEditor()">
+  <button id="btnNewTrack" class="btn-float">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
     <span>Новый трек</span>
   </button>
 
   <div id="editorScreen" class="editor-screen">
     <div class="editor-topbar">
-      <button class="btn-pill" onclick="closeEditor()">Назад</button>
+      <button class="btn-pill" id="btnBack">Назад</button>
       <span id="saveStatus" class="save-status">Сохранено</span>
-      <button class="btn-pill btn-danger" onclick="deleteCurrentNote()">Удалить</button>
+      <button class="btn-pill btn-danger" id="btnDelete">Удалить</button>
     </div>
     <input type="text" id="noteTitle" class="editor-title" placeholder="Название трека" oninput="handleAutoSave()">
     <textarea id="noteContent" class="editor-body" placeholder="Пиши текст трека..." oninput="handleAutoSave()"></textarea>
@@ -268,7 +261,13 @@
       tg.expand();
     }
 
+    // Привязка обработчиков событий
+    document.getElementById('btnNewTrack').onclick = () => openEditor();
+    document.getElementById('btnBack').onclick = () => closeEditor();
+    document.getElementById('btnDelete').onclick = () => deleteCurrentNote();
+
     async function initApp() {
+      // 1. Подгрузка ключей Vercel
       try {
         const configRes = await fetch('/api/config');
         if (configRes.ok) {
@@ -278,26 +277,46 @@
             supabase = supabaseLib.createClient(config.supabaseUrl, config.supabaseAnonKey);
           }
         }
-
-        const initData = tg?.initData;
-        if (initData) {
-          const res = await fetch('/api/telegram-auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ initData })
-          });
-
-          const authData = await res.json();
-          if (res.ok && authData.user) {
-            currentUser = authData.user;
-          } else {
-            alert("Ошибка авторизации: " + (authData.error || res.status));
-          }
-        }
       } catch (e) {
-        alert("Ошибка сети: " + e.message);
+        console.error("Config fetch error", e);
       }
 
+      // 2. Создание/Получение профиля в Supabase напрямик через Telegram
+      const tgUser = tg?.initDataUnsafe?.user;
+
+      if (tgUser && supabase) {
+        try {
+          let { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('telegram_id', tgUser.id)
+            .maybeSingle();
+
+          if (!profile) {
+            const { data: newProfile } = await supabase
+              .from('profiles')
+              .insert({
+                telegram_id: tgUser.id,
+                first_name: tgUser.first_name || '',
+                username: tgUser.username || '',
+                is_guest: false
+              })
+              .select()
+              .single();
+            
+            profile = newProfile;
+          }
+
+          if (profile) {
+            currentUser = profile;
+            document.getElementById('userBadge').style.display = 'none';
+          }
+        } catch (err) {
+          console.error("Supabase profile error", err);
+        }
+      }
+
+      // 3. Фолбэк в локальный режим, если не в Telegram
       if (!currentUser) {
         document.getElementById('userBadge').style.display = 'block';
         let localGuestId = sessionStorage.getItem('guest_id');
@@ -374,11 +393,11 @@
       }
 
       document.getElementById('saveStatus').innerText = 'Сохранено';
-      editor.classList.add('active');
+      editor.style.display = 'flex';
     }
 
     function closeEditor() {
-      document.getElementById('editorScreen').classList.remove('active');
+      document.getElementById('editorScreen').style.display = 'none';
       renderNotes();
     }
 
