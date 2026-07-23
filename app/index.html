@@ -230,7 +230,7 @@
     <div class="app-title">Мысли</div>
   </div>
 
-  <div id="statusBar" class="status-bar">Запуск приложения...</div>
+  <div id="statusBar" class="status-bar">Запуск...</div>
 
   <div class="search-box">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -255,6 +255,9 @@
   </div>
 
   <script>
+    const SUPABASE_URL = "https://sxdswgoqgvkmddknqzir.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_7_PN5q0F5n9wdnnSm4xiLQ_vHEftQL9";
+
     let supabase = null;
     let currentUser = null;
     let notes = [];
@@ -272,46 +275,33 @@
       if (el) el.innerText = text;
     }
 
-    async function fetchWithTimeout(url, ms = 3000) {
-      const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), ms);
-      try {
-        const res = await fetch(url, { signal: controller.signal });
-        clearTimeout(id);
-        return res;
-      } catch (e) {
-        clearTimeout(id);
-        throw e;
-      }
-    }
-
     async function initApp() {
-      // Step 1: Config
-      setStatus("1/3 Чтение конфига Vercel...");
+      // Инициализация клиентом Supabase
       try {
-        const configRes = await fetchWithTimeout('/api/config', 3000);
-        if (configRes.ok) {
-          const config = await configRes.json();
-          const supabaseLib = window.supabase || window.supabaseClient;
-          if (supabaseLib && config.supabaseUrl && config.supabaseAnonKey) {
-            supabase = supabaseLib.createClient(config.supabaseUrl, config.supabaseAnonKey);
-          }
+        const supabaseLib = window.supabase || window.supabaseClient;
+        if (supabaseLib) {
+          supabase = supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } else {
+          setStatus("Ошибка: Supabase SDK не подгрузился");
         }
       } catch (e) {
-        console.warn("Конфиг Vercel не ответил за 3 сек, автономный режим");
+        setStatus("Ошибка инициализации Supabase: " + e.message);
       }
 
-      // Step 2: User profile
-      setStatus("2/3 Проверка профиля...");
+      // Подключение пользователя Telegram
       const tgUser = tg?.initDataUnsafe?.user;
 
       if (tgUser && supabase) {
         try {
-          let { data: profile } = await supabase
+          let { data: profile, error: selectErr } = await supabase
             .from('profiles')
             .select('*')
             .eq('telegram_id', tgUser.id)
             .maybeSingle();
+
+          if (selectErr) {
+            setStatus("Ошибка выбора профиля: " + selectErr.message);
+          }
 
           if (!profile) {
             const { data: newProfile, error: insErr } = await supabase
@@ -325,20 +315,23 @@
               .select()
               .single();
             
-            if (insErr) setStatus("Ошибка записи БД: " + insErr.message);
-            profile = newProfile;
+            if (insErr) {
+              setStatus("Ошибка создания профиля: " + insErr.message);
+            } else {
+              profile = newProfile;
+            }
           }
 
           if (profile) {
             currentUser = profile;
-            setStatus("Профиль: " + profile.first_name + " (ID: " + profile.telegram_id + ")");
+            setStatus("Авторизован: " + (profile.first_name || profile.telegram_id));
           }
         } catch (err) {
-          setStatus("Ошибка БД: " + err.message);
+          setStatus("Исключение БД: " + err.message);
         }
       }
 
-      // Step 3: Guest fallback
+      // Гостевой режим
       if (!currentUser) {
         let localGuestId = sessionStorage.getItem('guest_id');
         if (!localGuestId) {
@@ -346,7 +339,7 @@
           sessionStorage.setItem('guest_id', localGuestId);
         }
         currentUser = { id: localGuestId, is_guest: true };
-        setStatus("Гостевой режим (локальное хранилище)");
+        setStatus("Гостевой режим");
       }
 
       await loadNotes();
@@ -400,26 +393,22 @@
     }
 
     function openEditor(noteId = null) {
-      try {
-        currentNoteId = noteId;
-        const editor = document.getElementById('editorScreen');
-        const titleInput = document.getElementById('noteTitle');
-        const contentInput = document.getElementById('noteContent');
+      currentNoteId = noteId;
+      const editor = document.getElementById('editorScreen');
+      const titleInput = document.getElementById('noteTitle');
+      const contentInput = document.getElementById('noteContent');
 
-        if (noteId && notes) {
-          const note = notes.find(n => n.id === noteId);
-          titleInput.value = note ? (note.title || '') : '';
-          contentInput.value = note ? (note.content || '') : '';
-        } else {
-          titleInput.value = '';
-          contentInput.value = '';
-        }
-
-        document.getElementById('saveStatus').innerText = 'Сохранено';
-        editor.style.display = 'flex';
-      } catch (e) {
-        alert("Ошибка открытия редактора: " + e.message);
+      if (noteId && notes) {
+        const note = notes.find(n => n.id === noteId);
+        titleInput.value = note ? (note.title || '') : '';
+        contentInput.value = note ? (note.content || '') : '';
+      } else {
+        titleInput.value = '';
+        contentInput.value = '';
       }
+
+      document.getElementById('saveStatus').innerText = 'Сохранено';
+      editor.style.display = 'flex';
     }
 
     function closeEditor() {
