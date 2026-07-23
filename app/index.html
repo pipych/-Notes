@@ -8,15 +8,19 @@
 
   <style>
     :root {
-      --bg-app: #0d0d0f;
-      --bg-card: #18181c;
-      --bg-card-hover: #222228;
+      --bg-app: #08080a;
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glass-bg-hover: rgba(255, 255, 255, 0.09);
+      --glass-blur: blur(20px) saturate(180%);
+      --glass-border: 1px solid rgba(255, 255, 255, 0.12);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      --glass-highlight: inset 0 1px 1px 0 rgba(255, 255, 255, 0.2);
+      
       --text-main: #ededed;
       --text-muted: #8e8e93;
       --danger: #ff453a;
-      --radius-card: 20px;
+      --radius-card: 22px;
       --radius-pill: 9999px;
-      --border-subtle: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     * {
@@ -50,22 +54,29 @@
     .app-title {
       font-size: 28px;
       font-weight: 700;
+      letter-spacing: -0.5px;
     }
 
     .status-bar {
       font-size: 11px;
-      padding: 6px 12px;
+      padding: 6px 14px;
       border-radius: var(--radius-pill);
-      background: var(--bg-card);
-      border: var(--border-subtle);
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: var(--glass-border);
+      box-shadow: var(--glass-highlight);
       color: var(--text-muted);
       margin-bottom: 16px;
       word-break: break-all;
     }
 
     .search-box {
-      background: var(--bg-card);
-      border: var(--border-subtle);
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: var(--glass-border);
+      box-shadow: var(--glass-shadow), var(--glass-highlight);
       border-radius: var(--radius-pill);
       padding: 12px 18px;
       margin-bottom: 20px;
@@ -88,11 +99,20 @@
     }
 
     .note-card {
-      background: var(--bg-card);
-      border: var(--border-subtle);
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: var(--glass-border);
+      box-shadow: var(--glass-shadow), var(--glass-highlight);
       border-radius: var(--radius-card);
       padding: 18px 20px;
       cursor: pointer;
+      transition: background 0.2s ease, transform 0.15s ease;
+    }
+
+    .note-card:active {
+      background: var(--glass-bg-hover);
+      transform: scale(0.98);
     }
 
     .note-card-title {
@@ -122,21 +142,31 @@
       position: fixed;
       bottom: calc(env(safe-area-inset-bottom) + 24px);
       right: 20px;
-      background: var(--text-main);
-      color: var(--bg-app);
-      border: none;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      color: #000;
+      border: var(--glass-border);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), var(--glass-highlight);
       border-radius: var(--radius-pill);
       padding: 14px 22px;
       font-size: 15px;
       font-weight: 600;
       cursor: pointer;
       z-index: 50;
+      transition: transform 0.15s ease;
+    }
+
+    .btn-float:active {
+      transform: scale(0.95);
     }
 
     .editor-screen {
       position: fixed;
       inset: 0;
-      background: var(--bg-app);
+      background: rgba(8, 8, 10, 0.85);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
       z-index: 9999;
       padding: 16px 16px calc(env(safe-area-inset-bottom) + 20px) 16px;
       display: none;
@@ -155,17 +185,26 @@
     }
 
     .btn-icon {
-      width: 40px;
-      height: 40px;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
-      background: var(--bg-card);
-      border: var(--border-subtle);
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: var(--glass-border);
+      box-shadow: var(--glass-highlight);
       color: var(--text-main);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       flex-shrink: 0;
+      transition: background 0.2s ease, transform 0.15s ease;
+    }
+
+    .btn-icon:active {
+      background: var(--glass-bg-hover);
+      transform: scale(0.92);
     }
 
     .btn-icon.btn-danger {
