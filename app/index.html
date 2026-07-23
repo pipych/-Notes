@@ -108,21 +108,43 @@
       flex: 1;
     }
 
+    .note-wrapper {
+      position: relative;
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      background: var(--danger);
+      animation: fadeIn 0.25s ease-out;
+      transition: max-height 0.3s ease, margin 0.3s ease, opacity 0.3s ease;
+    }
+
+    .note-delete-bg {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 88px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
     .note-card {
+      position: relative;
       background: var(--glass-bg);
       border: var(--glass-border);
       box-shadow: var(--glass-shadow), var(--glass-highlight);
       border-radius: var(--radius-card);
       padding: 18px 20px;
       cursor: pointer;
-      transition: background 0.15s ease, transform 0.15s ease;
+      touch-action: pan-y;
+      transition: background 0.15s ease;
       will-change: transform;
-      animation: fadeIn 0.25s ease-out;
     }
 
     .note-card:active {
       background: var(--glass-bg-hover);
-      transform: scale(0.98);
     }
 
     .note-card-title {
@@ -427,16 +449,84 @@
           day: 'numeric', month: 'short'
         });
 
+        const wrapper = document.createElement('div');
+        wrapper.className = 'note-wrapper';
+
+        const deleteBg = document.createElement('div');
+        deleteBg.className = 'note-delete-bg';
+        deleteBg.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
+
         const card = document.createElement('div');
         card.className = 'note-card';
-        card.onclick = () => openEditor(note.id);
         card.innerHTML = `
           <div class="note-card-title">${note.title || 'Без названия'}</div>
           <div class="note-card-preview">${note.content || 'Пустой текст...'}</div>
           <div class="note-card-date">${dateStr}</div>
         `;
-        container.appendChild(card);
+
+        // Swipe logic
+        let startX = 0;
+        let currentTranslate = 0;
+        let isDragging = false;
+
+        card.addEventListener('touchstart', (e) => {
+          startX = e.touches.clientX;
+          isDragging = true;
+          card.style.transition = 'none';
+        }, { passive: true });
+
+        card.addEventListener('touchmove', (e) => {
+          if (!isDragging) return;
+          const currentX = e.touches.clientX;
+          const diff = currentX - startX;
+          if (diff < 0) {
+            currentTranslate = Math.max(diff, -100);
+            card.style.transform = `translateX(${currentTranslate}px)`;
+          } else {
+            card.style.transform = `translateX(0px)`;
+          }
+        }, { passive: true });
+
+        card.addEventListener('touchend', () => {
+          if (!isDragging) return;
+          isDragging = false;
+          card.style.transition = 'transform 0.2s ease';
+          if (currentTranslate < -70) {
+            card.style.transform = `translateX(-100%)`;
+            wrapper.style.opacity = '0';
+            wrapper.style.maxHeight = '0px';
+            wrapper.style.margin = '0';
+            setTimeout(() => deleteNoteById(note.id), 250);
+          } else {
+            card.style.transform = `translateX(0px)`;
+          }
+          currentTranslate = 0;
+        });
+
+        // Click to open editor if not swiping significantly
+        let clickStartX = 0;
+        card.addEventListener('pointerdown', (e) => { clickStartX = e.clientX; });
+        card.addEventListener('click', (e) => {
+          if (Math.abs(e.clientX - clickStartX) < 5) {
+            openEditor(note.id);
+          }
+        });
+
+        wrapper.appendChild(deleteBg);
+        wrapper.appendChild(card);
+        container.appendChild(wrapper);
       });
+    }
+
+    async function deleteNoteById(id) {
+      if (currentUser.is_guest) {
+        notes = notes.filter(n => n.id !== id);
+        sessionStorage.setItem('guest_notes', JSON.stringify(notes));
+      } else {
+        await supabaseFetch(`/notes?id=eq.${id}`, { method: 'DELETE' });
+        notes = notes.filter(n => n.id !== id);
+      }
+      renderNotes();
     }
 
     function openEditor(noteId = null) {
