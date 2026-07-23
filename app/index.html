@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Мысли</title>
   
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -44,7 +47,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
     }
 
     .app-title {
@@ -53,13 +56,14 @@
       letter-spacing: -0.5px;
     }
 
-    .badge-guest {
-      background: #2a2010;
-      color: #ffb340;
+    .status-bar {
       font-size: 11px;
       padding: 6px 12px;
       border-radius: var(--radius-pill);
-      border: 1px solid rgba(255, 179, 64, 0.2);
+      background: var(--bg-card);
+      border: var(--border-subtle);
+      color: var(--text-muted);
+      margin-bottom: 16px;
     }
 
     .search-box {
@@ -223,8 +227,9 @@
 
   <div class="header">
     <div class="app-title">Мысли</div>
-    <div id="userBadge" class="badge-guest" style="display:none;">Гостевой режим</div>
   </div>
+
+  <div id="statusBar" class="status-bar">Инициализация...</div>
 
   <div class="search-box">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -233,16 +238,16 @@
 
   <div id="notesList" class="notes-list"></div>
 
-  <button id="btnNewTrack" class="btn-float">
+  <button class="btn-float" onclick="openEditor()">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
     <span>Новый трек</span>
   </button>
 
   <div id="editorScreen" class="editor-screen">
     <div class="editor-topbar">
-      <button class="btn-pill" id="btnBack">Назад</button>
+      <button class="btn-pill" onclick="closeEditor()">Назад</button>
       <span id="saveStatus" class="save-status">Сохранено</span>
-      <button class="btn-pill btn-danger" id="btnDelete">Удалить</button>
+      <button class="btn-pill btn-danger" onclick="deleteCurrentNote()">Удалить</button>
     </div>
     <input type="text" id="noteTitle" class="editor-title" placeholder="Название трека" oninput="handleAutoSave()">
     <textarea id="noteContent" class="editor-body" placeholder="Пиши текст трека..." oninput="handleAutoSave()"></textarea>
@@ -261,13 +266,12 @@
       tg.expand();
     }
 
-    // Привязка обработчиков событий
-    document.getElementById('btnNewTrack').onclick = () => openEditor();
-    document.getElementById('btnBack').onclick = () => closeEditor();
-    document.getElementById('btnDelete').onclick = () => deleteCurrentNote();
+    function setStatus(text) {
+      document.getElementById('statusBar').innerText = text;
+    }
 
     async function initApp() {
-      // 1. Подгрузка ключей Vercel
+      // 1. Конфиг
       try {
         const configRes = await fetch('/api/config');
         if (configRes.ok) {
@@ -278,10 +282,10 @@
           }
         }
       } catch (e) {
-        console.error("Config fetch error", e);
+        console.error(e);
       }
 
-      // 2. Создание/Получение профиля в Supabase напрямик через Telegram
+      // 2. Профиль
       const tgUser = tg?.initDataUnsafe?.user;
 
       if (tgUser && supabase) {
@@ -293,7 +297,7 @@
             .maybeSingle();
 
           if (!profile) {
-            const { data: newProfile } = await supabase
+            const { data: newProfile, error: insErr } = await supabase
               .from('profiles')
               .insert({
                 telegram_id: tgUser.id,
@@ -304,27 +308,28 @@
               .select()
               .single();
             
+            if (insErr) setStatus("Ошибка записи профиля: " + insErr.message);
             profile = newProfile;
           }
 
           if (profile) {
             currentUser = profile;
-            document.getElementById('userBadge').style.display = 'none';
+            setStatus("Профиль: ID " + profile.telegram_id);
           }
         } catch (err) {
-          console.error("Supabase profile error", err);
+          setStatus("Ошибка БД: " + err.message);
         }
       }
 
-      // 3. Фолбэк в локальный режим, если не в Telegram
+      // 3. Гость
       if (!currentUser) {
-        document.getElementById('userBadge').style.display = 'block';
         let localGuestId = sessionStorage.getItem('guest_id');
         if (!localGuestId) {
           localGuestId = 'guest_' + Math.random().toString(36).substr(2, 9);
           sessionStorage.setItem('guest_id', localGuestId);
         }
         currentUser = { id: localGuestId, is_guest: true };
+        setStatus("Гостевой режим");
       }
 
       await loadNotes();
