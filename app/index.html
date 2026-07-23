@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Мысли</title>
   
-  <!-- Telegram & Supabase SDKs -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -18,7 +17,6 @@
       --text-main: #ededed;
       --text-muted: #8e8e93;
       --accent: #2c2c30;
-      --accent-active: #3a3a40;
       --danger: #ff453a;
       --radius-card: 24px;
       --radius-pill: 9999px;
@@ -92,10 +90,6 @@
       width: 100%;
     }
 
-    .search-box input::placeholder {
-      color: var(--text-muted);
-    }
-
     .notes-list {
       display: flex;
       flex-direction: column;
@@ -110,11 +104,9 @@
       padding: 18px 20px;
       box-shadow: var(--shadow-float);
       cursor: pointer;
-      transition: transform 0.15s ease, background-color 0.15s ease;
     }
 
     .note-card:active {
-      transform: scale(0.98);
       background: var(--bg-card-hover);
     }
 
@@ -122,9 +114,6 @@
       font-size: 18px;
       font-weight: 600;
       margin-bottom: 6px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .note-card-preview {
@@ -160,33 +149,22 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      transition: transform 0.2s ease;
       z-index: 50;
     }
 
-    .btn-float:active {
-      transform: scale(0.94);
-    }
-
-    /* Исправленный оверлей */
+    /* Надежный модальный режим без translateY */
     .editor-screen {
       position: fixed;
       inset: 0;
       background: var(--bg-app);
-      z-index: 100;
+      z-index: 1000;
       padding: calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 20px) 16px;
-      display: flex;
+      display: none;
       flex-direction: column;
-      transform: translateY(100%);
-      pointer-events: none;
-      visibility: hidden;
-      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s;
     }
 
     .editor-screen.active {
-      transform: translateY(0);
-      pointer-events: auto;
-      visibility: visible;
+      display: flex !important;
     }
 
     .editor-topbar {
@@ -205,9 +183,6 @@
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
     }
 
     .btn-danger {
@@ -230,10 +205,6 @@
       width: 100%;
     }
 
-    .editor-title::placeholder {
-      color: var(--text-muted);
-    }
-
     .editor-body {
       background: transparent;
       border: none;
@@ -247,61 +218,44 @@
       font-family: inherit;
     }
 
-    .editor-body::placeholder {
-      color: var(--text-muted);
-    }
-
     .empty-state {
       text-align: center;
       color: var(--text-muted);
       margin-top: 80px;
       font-size: 15px;
-      line-height: 1.5;
     }
   </style>
 </head>
 <body>
 
-  <!-- Main Screen -->
   <div class="header">
     <div class="app-title">Мысли</div>
     <div id="userBadge" class="badge-guest" style="display:none;">Гостевой режим</div>
   </div>
 
   <div class="search-box">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-    <input type="text" id="searchInput" placeholder="Поиск по трекам и текстам..." oninput="renderNotes()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="text" id="searchInput" placeholder="Поиск по трекам..." oninput="renderNotes()">
   </div>
 
   <div id="notesList" class="notes-list"></div>
 
   <button class="btn-float" onclick="openEditor()">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
     <span>Новый трек</span>
   </button>
 
-  <!-- Editor Screen Overlay -->
   <div id="editorScreen" class="editor-screen">
     <div class="editor-topbar">
-      <button class="btn-pill" onclick="closeEditor()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-        Назад
-      </button>
+      <button class="btn-pill" onclick="closeEditor()">Назад</button>
       <span id="saveStatus" class="save-status">Сохранено</span>
-      <button class="btn-pill btn-danger" onclick="deleteCurrentNote()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-      </button>
+      <button class="btn-pill btn-danger" onclick="deleteCurrentNote()">Удалить</button>
     </div>
     <input type="text" id="noteTitle" class="editor-title" placeholder="Название трека" oninput="handleAutoSave()">
     <textarea id="noteContent" class="editor-body" placeholder="Пиши текст трека..." oninput="handleAutoSave()"></textarea>
   </div>
 
   <script>
-    window.onerror = function(msg, url, line) {
-      alert("Ошибка JS: " + msg + "\nСтрока: " + line);
-      return false;
-    };
-
     let supabase = null;
     let currentUser = null;
     let notes = [];
@@ -314,19 +268,10 @@
       tg.expand();
     }
 
-    function triggerHaptic(type = 'impact', style = 'light') {
-      if (tg?.HapticFeedback) {
-        if (type === 'impact') tg.HapticFeedback.impactOccurred(style);
-        if (type === 'notification') tg.HapticFeedback.notificationOccurred(style);
-      }
-    }
-
     async function initApp() {
       try {
         const configRes = await fetch('/api/config');
-        if (!configRes.ok) {
-          alert("Ошибка /api/config: HTTP " + configRes.status);
-        } else {
+        if (configRes.ok) {
           const config = await configRes.json();
           const supabaseLib = window.supabase || window.supabaseClient;
           if (supabaseLib && config.supabaseUrl && config.supabaseAnonKey) {
@@ -343,15 +288,14 @@
           });
 
           const authData = await res.json();
-
-          if (!res.ok) {
-            alert("Ошибка /api/telegram-auth (" + res.status + "): " + JSON.stringify(authData));
-          } else if (authData.user) {
+          if (res.ok && authData.user) {
             currentUser = authData.user;
+          } else {
+            alert("Ошибка авторизации: " + (authData.error || res.status));
           }
         }
       } catch (e) {
-        alert("Исключение в initApp: " + e.message);
+        alert("Ошибка сети: " + e.message);
       }
 
       if (!currentUser) {
@@ -415,7 +359,6 @@
     }
 
     function openEditor(noteId = null) {
-      triggerHaptic('impact', 'medium');
       currentNoteId = noteId;
       const editor = document.getElementById('editorScreen');
       const titleInput = document.getElementById('noteTitle');
@@ -435,7 +378,6 @@
     }
 
     function closeEditor() {
-      triggerHaptic('impact', 'light');
       document.getElementById('editorScreen').classList.remove('active');
       renderNotes();
     }
@@ -488,9 +430,7 @@
 
     async function deleteCurrentNote() {
       if (!currentNoteId) return closeEditor();
-      
-      triggerHaptic('notification', 'warning');
-      
+
       if (currentUser.is_guest || !supabase) {
         notes = notes.filter(n => n.id !== currentNoteId);
         sessionStorage.setItem('guest_notes', JSON.stringify(notes));
