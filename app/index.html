@@ -4,8 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Мысли</title>
+  
+  <!-- Telegram & Supabase SDKs -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     :root {
       --bg-app: #0d0d0f;
@@ -20,7 +23,7 @@
       --radius-card: 24px;
       --radius-pill: 9999px;
       --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.45);
-      --border-subtle: 1px solid rgba(255, 255, 255, 0.07);
+      --border-subtle: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     * {
@@ -38,9 +41,10 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow-x: hidden;
     }
 
-    /* Floating Navigation Header */
+    /* Floating Header */
     .header {
       display: flex;
       align-items: center;
@@ -72,7 +76,13 @@
       margin-bottom: 20px;
       display: flex;
       align-items: center;
+      gap: 10px;
       box-shadow: var(--shadow-float);
+    }
+
+    .search-box svg {
+      color: var(--text-muted);
+      flex-shrink: 0;
     }
 
     .search-box input {
@@ -88,7 +98,7 @@
       color: var(--text-muted);
     }
 
-    /* Track Notes List */
+    /* Notes List */
     .notes-list {
       display: flex;
       flex-direction: column;
@@ -104,7 +114,6 @@
       box-shadow: var(--shadow-float);
       cursor: pointer;
       transition: transform 0.15s ease, background-color 0.15s ease;
-      position: relative;
     }
 
     .note-card:active {
@@ -138,7 +147,7 @@
       opacity: 0.7;
     }
 
-    /* Floating Add Button */
+    /* Floating Action Button */
     .btn-float {
       position: fixed;
       bottom: calc(env(safe-area-inset-bottom) + 24px);
@@ -147,7 +156,7 @@
       color: var(--bg-app);
       border: none;
       border-radius: var(--radius-pill);
-      padding: 16px 24px;
+      padding: 14px 22px;
       font-size: 15px;
       font-weight: 600;
       box-shadow: 0 10px 25px rgba(255, 255, 255, 0.2);
@@ -156,13 +165,14 @@
       align-items: center;
       gap: 8px;
       transition: transform 0.2s ease;
+      z-index: 50;
     }
 
     .btn-float:active {
       transform: scale(0.94);
     }
 
-    /* Editor Screen (Hidden by default) */
+    /* Editor Screen Overlay */
     .editor-screen {
       position: fixed;
       inset: 0;
@@ -190,11 +200,14 @@
       background: var(--bg-card);
       border: var(--border-subtle);
       color: var(--text-main);
-      padding: 10px 18px;
+      padding: 10px 16px;
       border-radius: var(--radius-pill);
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .btn-danger {
@@ -241,44 +254,53 @@
     .empty-state {
       text-align: center;
       color: var(--text-muted);
-      margin-top: 60px;
+      margin-top: 80px;
       font-size: 15px;
+      line-height: 1.5;
     }
   </style>
 </head>
 <body>
 
-  <!-- Main View -->
+  <!-- Main Screen -->
   <div class="header">
     <div class="app-title">Мысли</div>
     <div id="userBadge" class="badge-guest" style="display:none;">Гостевой режим</div>
   </div>
 
   <div class="search-box">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
     <input type="text" id="searchInput" placeholder="Поиск по трекам и текстам..." oninput="renderNotes()">
   </div>
 
   <div id="notesList" class="notes-list"></div>
 
   <button class="btn-float" onclick="openEditor()">
-    <span>+</span> Новый трек
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+    <span>Новый трек</span>
   </button>
 
-  <!-- Editor View -->
+  <!-- Editor Screen Overlay -->
   <div id="editorScreen" class="editor-screen">
     <div class="editor-topbar">
-      <button class="btn-pill" onclick="closeEditor()">← Закрыть</button>
+      <button class="btn-pill" onclick="closeEditor()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        Назад
+      </button>
       <span id="saveStatus" class="save-status">Сохранено</span>
-      <button class="btn-pill btn-danger" onclick="deleteCurrentNote()">Удалить</button>
+      <button class="btn-pill btn-danger" onclick="deleteCurrentNote()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+      </button>
     </div>
     <input type="text" id="noteTitle" class="editor-title" placeholder="Название трека" oninput="handleAutoSave()">
     <textarea id="noteContent" class="editor-body" placeholder="Пиши текст трека..." oninput="handleAutoSave()"></textarea>
   </div>
 
   <script>
-    // Supabase config
-    const SUPABASE_URL = "YOUR_SUPABASE_URL";
-    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+    // Настройки Supabase (Вставь свои публичные данные из Supabase Settings -> API)
+    const SUPABASE_URL = "ВСТАВЬ_СВОЙ_SUPABASE_URL";
+    const SUPABASE_ANON_KEY = "ВСТАВЬ_СВОЙ_SUPABASE_ANON_KEY";
+    
     const supabase = supabaseClient.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const tg = window.Telegram?.WebApp;
@@ -292,7 +314,7 @@
     let currentNoteId = null;
     let autoSaveTimer = null;
 
-    // Trigger Native Telegram Haptic Feedback
+    // Тактильная отдача для элементов Telegram
     function triggerHaptic(type = 'impact', style = 'light') {
       if (tg?.HapticFeedback) {
         if (type === 'impact') tg.HapticFeedback.impactOccurred(style);
@@ -304,9 +326,9 @@
       const initData = tg?.initData;
 
       if (initData) {
-        // Telegram Auth via Edge Function
         try {
-          const res = await fetch(`${SUPABASE_URL}/functions/v1/telegram-auth`, {
+          // Обращение к относительной папке Vercel API
+          const res = await fetch('/api/telegram-auth', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ initData })
@@ -314,11 +336,11 @@
           const data = await res.json();
           if (data.user) currentUser = data.user;
         } catch (e) {
-          console.error("TG Auth error, switching to guest mode", e);
+          console.error("Ошибка авторизации Telegram, переход в гостевой режим", e);
         }
       }
 
-      // Guest Fallback Mode
+      // Если зашли просто через браузер или произошел сбой TG
       if (!currentUser) {
         document.getElementById('userBadge').style.display = 'block';
         let localGuestId = sessionStorage.getItem('guest_id');
@@ -353,11 +375,12 @@
       container.innerHTML = '';
 
       const filtered = notes.filter(n => 
-        n.title.toLowerCase().includes(query) || n.content.toLowerCase().includes(query)
+        (n.title && n.title.toLowerCase().includes(query)) || 
+        (n.content && n.content.toLowerCase().includes(query))
       );
 
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="empty-state">Заметок пока нет.<br>Нажми «+ Новый трек», чтобы начать.</div>`;
+        container.innerHTML = `<div class="empty-state">Заметок пока нет.<br>Нажми «Новый трек», чтобы записать текст.</div>`;
         return;
       }
 
@@ -387,8 +410,8 @@
 
       if (noteId) {
         const note = notes.find(n => n.id === noteId);
-        titleInput.value = note.title;
-        contentInput.value = note.content;
+        titleInput.value = note.title || '';
+        contentInput.value = note.content || '';
       } else {
         titleInput.value = '';
         contentInput.value = '';
