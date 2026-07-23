@@ -198,7 +198,7 @@
     <div class="app-title">Мысли</div>
   </div>
 
-  <div id="statusBar" class="status-bar">Инициализация...</div>
+  <div id="statusBar" class="status-bar">Запуск...</div>
 
   <div class="search-box">
     <input type="text" id="searchInput" placeholder="Поиск по трекам..." oninput="renderNotes()">
@@ -219,8 +219,8 @@
   </div>
 
   <script>
-    const SUPABASE_URL = "https://sxdswgoqgvkmddknqzir.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_7_PN5q0F5n9wdnnSm4xiLQ_vHEftQL9";
+    const SUPABASE_URL = "https://bnregnrapuvjtwufvmzn.supabase.co";
+    const SUPABASE_KEY = "EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJucmVnbnJhcHV2anR3dWZ2bXpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MTMxOTUsImV4cCI6MjEwMDM4OTE5NX0.CmZ0pDWnLIKYpWpfwq9ZX1Ybk6LwC3__qvGz5SQwzcw";
 
     let currentUser = null;
     let notes = [];
@@ -231,7 +231,6 @@
       document.getElementById('statusBar').innerText = txt;
     }
 
-    // Прямые запросы к REST API Supabase без сторонних библиотек
     async function supabaseFetch(path, options = {}) {
       const headers = {
         'apikey': SUPABASE_KEY,
@@ -285,7 +284,7 @@
 
           if (profile) {
             currentUser = profile;
-            setStatus("Авторизован: " + (profile.first_name || profile.telegram_id));
+            setStatus("Профиль создан/активен: " + (profile.first_name || profile.telegram_id));
           }
         }
 
