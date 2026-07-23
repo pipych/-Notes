@@ -30,10 +30,14 @@
     body {
       background-color: var(--bg-app);
       color: var(--text-main);
-      padding: calc(env(safe-area-inset-top) + 110px) 16px calc(env(safe-area-inset-bottom) + 24px) 16px;
+      padding: 16px 16px calc(env(safe-area-inset-bottom) + 24px) 16px;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+    }
+
+    body.in-tg {
+      padding-top: calc(env(safe-area-inset-top) + 110px);
     }
 
     .header {
@@ -134,9 +138,13 @@
       inset: 0;
       background: var(--bg-app);
       z-index: 9999;
-      padding: calc(env(safe-area-inset-top) + 110px) 16px calc(env(safe-area-inset-bottom) + 20px) 16px;
+      padding: 16px 16px calc(env(safe-area-inset-bottom) + 20px) 16px;
       display: none;
       flex-direction: column;
+    }
+
+    body.in-tg .editor-screen {
+      padding-top: calc(env(safe-area-inset-top) + 110px);
     }
 
     .editor-topbar {
@@ -146,17 +154,21 @@
       margin-bottom: 16px;
     }
 
-    .btn-pill {
+    .btn-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
       background: var(--bg-card);
       border: var(--border-subtle);
       color: var(--text-main);
-      padding: 10px 16px;
-      border-radius: var(--radius-pill);
-      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
+      flex-shrink: 0;
     }
 
-    .btn-danger {
+    .btn-icon.btn-danger {
       color: var(--danger);
     }
 
@@ -210,9 +222,13 @@
 
   <div id="editorScreen" class="editor-screen">
     <div class="editor-topbar">
-      <button class="btn-pill" id="btnBack">Назад</button>
+      <button class="btn-icon" id="btnBack">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
       <span id="saveStatus" style="font-size:12px; color:var(--text-muted);">Сохранено</span>
-      <button class="btn-pill btn-danger" id="btnDelete">Удалить</button>
+      <button class="btn-icon btn-danger" id="btnDelete">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </button>
     </div>
     <input type="text" id="noteTitle" class="editor-title" placeholder="Название трека" oninput="handleAutoSave()">
     <textarea id="noteContent" class="editor-body" placeholder="Пиши текст трека..." oninput="handleAutoSave()"></textarea>
@@ -257,6 +273,9 @@
         if (tg) {
           tg.ready();
           tg.expand();
+          if (tg.initData || (tg.platform && tg.platform !== 'unknown')) {
+            document.body.classList.add('in-tg');
+          }
         }
 
         const tgUser = tg?.initDataUnsafe?.user;
