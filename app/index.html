@@ -47,7 +47,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
 
     .app-title {
@@ -64,6 +64,7 @@
       border: var(--border-subtle);
       color: var(--text-muted);
       margin-bottom: 16px;
+      word-break: break-all;
     }
 
     .search-box {
@@ -229,7 +230,7 @@
     <div class="app-title">Мысли</div>
   </div>
 
-  <div id="statusBar" class="status-bar">Инициализация...</div>
+  <div id="statusBar" class="status-bar">Запуск приложения...</div>
 
   <div class="search-box">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -267,13 +268,28 @@
     }
 
     function setStatus(text) {
-      document.getElementById('statusBar').innerText = text;
+      const el = document.getElementById('statusBar');
+      if (el) el.innerText = text;
+    }
+
+    async function fetchWithTimeout(url, ms = 3000) {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), ms);
+      try {
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(id);
+        return res;
+      } catch (e) {
+        clearTimeout(id);
+        throw e;
+      }
     }
 
     async function initApp() {
-      // 1. Конфиг
+      // Step 1: Config
+      setStatus("1/3 Чтение конфига Vercel...");
       try {
-        const configRes = await fetch('/api/config');
+        const configRes = await fetchWithTimeout('/api/config', 3000);
         if (configRes.ok) {
           const config = await configRes.json();
           const supabaseLib = window.supabase || window.supabaseClient;
@@ -282,10 +298,11 @@
           }
         }
       } catch (e) {
-        console.error(e);
+        console.warn("Конфиг Vercel не ответил за 3 сек, автономный режим");
       }
 
-      // 2. Профиль
+      // Step 2: User profile
+      setStatus("2/3 Проверка профиля...");
       const tgUser = tg?.initDataUnsafe?.user;
 
       if (tgUser && supabase) {
@@ -308,20 +325,20 @@
               .select()
               .single();
             
-            if (insErr) setStatus("Ошибка записи профиля: " + insErr.message);
+            if (insErr) setStatus("Ошибка записи БД: " + insErr.message);
             profile = newProfile;
           }
 
           if (profile) {
             currentUser = profile;
-            setStatus("Профиль: ID " + profile.telegram_id);
+            setStatus("Профиль: " + profile.first_name + " (ID: " + profile.telegram_id + ")");
           }
         } catch (err) {
           setStatus("Ошибка БД: " + err.message);
         }
       }
 
-      // 3. Гость
+      // Step 3: Guest fallback
       if (!currentUser) {
         let localGuestId = sessionStorage.getItem('guest_id');
         if (!localGuestId) {
@@ -329,7 +346,7 @@
           sessionStorage.setItem('guest_id', localGuestId);
         }
         currentUser = { id: localGuestId, is_guest: true };
-        setStatus("Гостевой режим");
+        setStatus("Гостевой режим (локальное хранилище)");
       }
 
       await loadNotes();
@@ -383,22 +400,26 @@
     }
 
     function openEditor(noteId = null) {
-      currentNoteId = noteId;
-      const editor = document.getElementById('editorScreen');
-      const titleInput = document.getElementById('noteTitle');
-      const contentInput = document.getElementById('noteContent');
+      try {
+        currentNoteId = noteId;
+        const editor = document.getElementById('editorScreen');
+        const titleInput = document.getElementById('noteTitle');
+        const contentInput = document.getElementById('noteContent');
 
-      if (noteId) {
-        const note = notes.find(n => n.id === noteId);
-        titleInput.value = note ? (note.title || '') : '';
-        contentInput.value = note ? (note.content || '') : '';
-      } else {
-        titleInput.value = '';
-        contentInput.value = '';
+        if (noteId && notes) {
+          const note = notes.find(n => n.id === noteId);
+          titleInput.value = note ? (note.title || '') : '';
+          contentInput.value = note ? (note.content || '') : '';
+        } else {
+          titleInput.value = '';
+          contentInput.value = '';
+        }
+
+        document.getElementById('saveStatus').innerText = 'Сохранено';
+        editor.style.display = 'flex';
+      } catch (e) {
+        alert("Ошибка открытия редактора: " + e.message);
       }
-
-      document.getElementById('saveStatus').innerText = 'Сохранено';
-      editor.style.display = 'flex';
     }
 
     function closeEditor() {
