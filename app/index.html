@@ -110,21 +110,24 @@
       position: relative;
       border-radius: var(--radius-card);
       overflow: hidden;
-      background: var(--danger);
+      background: transparent;
       animation: fadeIn 0.25s ease-out;
       transition: max-height 0.3s ease, margin 0.3s ease, opacity 0.3s ease;
     }
 
     .note-delete-bg {
       position: absolute;
-      right: 0;
-      top: 0;
-      bottom: 0;
-      width: 88px;
+      inset: 0;
+      background: var(--danger);
+      border-radius: var(--radius-card);
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-end;
+      padding-right: 28px;
       color: #ffffff;
+      opacity: 0;
+      transition: opacity 0.1s ease;
+      z-index: 1;
     }
 
     .note-card {
@@ -135,6 +138,7 @@
       border-radius: var(--radius-card);
       padding: 18px 20px;
       cursor: pointer;
+      user-select: none;
       touch-action: pan-y;
       transition: background 0.15s ease;
       will-change: transform;
@@ -462,31 +466,42 @@
         `;
 
         let startX = 0;
+        let startY = 0;
         let currentTranslate = 0;
-        let isDragging = false;
+        let isTouchStarted = false;
+        let isHorizontalSwipe = false;
 
         card.addEventListener('touchstart', (e) => {
-          startX = e.touches.clientX;
-          isDragging = true;
+          startX = e.touches[0].clientX;
+          startY = e.touches[0].clientY;
+          isTouchStarted = true;
+          isHorizontalSwipe = false;
           card.style.transition = 'none';
         }, { passive: true });
 
         card.addEventListener('touchmove', (e) => {
-          if (!isDragging) return;
-          const currentX = e.touches.clientX;
-          const diff = currentX - startX;
-          if (diff < 0) {
-            currentTranslate = Math.max(diff, -100);
+          if (!isTouchStarted) return;
+          const touchX = e.touches[0].clientX;
+          const touchY = e.touches[0].clientY;
+          const diffX = touchX - startX;
+          const diffY = touchY - startY;
+
+          if (!isHorizontalSwipe && Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 8) {
+            isHorizontalSwipe = true;
+          }
+
+          if (isHorizontalSwipe && diffX < 0) {
+            currentTranslate = Math.max(diffX, -120);
+            deleteBg.style.opacity = '1';
             card.style.transform = `translateX(${currentTranslate}px)`;
-          } else {
-            card.style.transform = `translateX(0px)`;
           }
         }, { passive: true });
 
         card.addEventListener('touchend', () => {
-          if (!isDragging) return;
-          isDragging = false;
+          if (!isTouchStarted) return;
+          isTouchStarted = false;
           card.style.transition = 'transform 0.2s ease';
+
           if (currentTranslate < -70) {
             card.style.transform = `translateX(-100%)`;
             wrapper.style.opacity = '0';
@@ -495,14 +510,13 @@
             setTimeout(() => deleteNoteById(note.id), 250);
           } else {
             card.style.transform = `translateX(0px)`;
+            setTimeout(() => { deleteBg.style.opacity = '0'; }, 200);
           }
           currentTranslate = 0;
         });
 
-        let clickStartX = 0;
-        card.addEventListener('pointerdown', (e) => { clickStartX = e.clientX; });
-        card.addEventListener('click', (e) => {
-          if (Math.abs(e.clientX - clickStartX) < 5) {
+        card.addEventListener('click', () => {
+          if (!isHorizontalSwipe) {
             openEditor(note.id);
           }
         });
