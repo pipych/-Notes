@@ -9,7 +9,7 @@
   <title>Мысли</title>
   
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
   <style>
     :root {
@@ -230,7 +230,7 @@
     <div class="app-title">Мысли</div>
   </div>
 
-  <div id="statusBar" class="status-bar">Запуск...</div>
+  <div id="statusBar" class="status-bar">Старт...</div>
 
   <div class="search-box">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -239,22 +239,28 @@
 
   <div id="notesList" class="notes-list"></div>
 
-  <button class="btn-float" onclick="openEditor()">
+  <button id="btnNewTrack" class="btn-float">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
     <span>Новый трек</span>
   </button>
 
   <div id="editorScreen" class="editor-screen">
     <div class="editor-topbar">
-      <button class="btn-pill" onclick="closeEditor()">Назад</button>
+      <button class="btn-pill" id="btnBack">Назад</button>
       <span id="saveStatus" class="save-status">Сохранено</span>
-      <button class="btn-pill btn-danger" onclick="deleteCurrentNote()">Удалить</button>
+      <button class="btn-pill btn-danger" id="btnDelete">Удалить</button>
     </div>
     <input type="text" id="noteTitle" class="editor-title" placeholder="Название трека" oninput="handleAutoSave()">
     <textarea id="noteContent" class="editor-body" placeholder="Пиши текст трека..." oninput="handleAutoSave()"></textarea>
   </div>
 
   <script>
+    window.onerror = function(msg, url, line) {
+      const el = document.getElementById('statusBar');
+      if (el) el.innerText = "Ошибка JS: " + msg + " (стр. " + line + ")";
+      return false;
+    };
+
     const SUPABASE_URL = "https://sxdswgoqgvkmddknqzir.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_7_PN5q0F5n9wdnnSm4xiLQ_vHEftQL9";
 
@@ -264,34 +270,40 @@
     let currentNoteId = null;
     let autoSaveTimer = null;
 
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-      tg.ready();
-      tg.expand();
-    }
-
     function setStatus(text) {
       const el = document.getElementById('statusBar');
       if (el) el.innerText = text;
     }
 
-    async function initApp() {
-      // Инициализация клиентом Supabase
+    document.getElementById('btnNewTrack').onclick = function() { openEditor(); };
+    document.getElementById('btnBack').onclick = function() { closeEditor(); };
+    document.getElementById('btnDelete').onclick = function() { deleteCurrentNote(); };
+
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
       try {
-        const supabaseLib = window.supabase || window.supabaseClient;
-        if (supabaseLib) {
-          supabase = supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        tg.ready();
+        tg.expand();
+      } catch(e) {}
+    }
+
+    async function initApp() {
+      setStatus("Инициализация Supabase...");
+
+      try {
+        if (window.supabase?.createClient) {
+          supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         } else {
-          setStatus("Ошибка: Supabase SDK не подгрузился");
+          setStatus("Ошибка: библиотека Supabase не подгрузилась");
         }
       } catch (e) {
         setStatus("Ошибка инициализации Supabase: " + e.message);
       }
 
-      // Подключение пользователя Telegram
       const tgUser = tg?.initDataUnsafe?.user;
 
       if (tgUser && supabase) {
+        setStatus("Запрос к базе Supabase...");
         try {
           let { data: profile, error: selectErr } = await supabase
             .from('profiles')
@@ -300,10 +312,11 @@
             .maybeSingle();
 
           if (selectErr) {
-            setStatus("Ошибка выбора профиля: " + selectErr.message);
+            setStatus("Ошибка БД (Select): " + selectErr.message);
           }
 
           if (!profile) {
+            setStatus("Создание профиля...");
             const { data: newProfile, error: insErr } = await supabase
               .from('profiles')
               .insert({
@@ -314,9 +327,9 @@
               })
               .select()
               .single();
-            
+
             if (insErr) {
-              setStatus("Ошибка создания профиля: " + insErr.message);
+              setStatus("Ошибка БД (Insert): " + insErr.message);
             } else {
               profile = newProfile;
             }
@@ -324,14 +337,15 @@
 
           if (profile) {
             currentUser = profile;
-            setStatus("Авторизован: " + (profile.first_name || profile.telegram_id));
+            setStatus("Профиль создан/найден: ID " + profile.telegram_id);
           }
         } catch (err) {
           setStatus("Исключение БД: " + err.message);
         }
+      } else if (!tgUser) {
+        setStatus("Гостевой режим (запуск вне Telegram)");
       }
 
-      // Гостевой режим
       if (!currentUser) {
         let localGuestId = sessionStorage.getItem('guest_id');
         if (!localGuestId) {
@@ -339,7 +353,6 @@
           sessionStorage.setItem('guest_id', localGuestId);
         }
         currentUser = { id: localGuestId, is_guest: true };
-        setStatus("Гостевой режим");
       }
 
       await loadNotes();
