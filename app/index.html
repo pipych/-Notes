@@ -44,7 +44,6 @@
       overflow-x: hidden;
     }
 
-    /* Header */
     .header {
       display: flex;
       align-items: center;
@@ -67,7 +66,6 @@
       border: 1px solid rgba(255, 179, 64, 0.2);
     }
 
-    /* Search Bar */
     .search-box {
       background: var(--bg-card);
       border: var(--border-subtle);
@@ -98,7 +96,6 @@
       color: var(--text-muted);
     }
 
-    /* Notes List */
     .notes-list {
       display: flex;
       flex-direction: column;
@@ -147,7 +144,6 @@
       opacity: 0.7;
     }
 
-    /* Floating Action Button */
     .btn-float {
       position: fixed;
       bottom: calc(env(safe-area-inset-bottom) + 24px);
@@ -172,7 +168,6 @@
       transform: scale(0.94);
     }
 
-    /* Editor Screen Overlay */
     .editor-screen {
       position: fixed;
       inset: 0;
@@ -297,6 +292,11 @@
   </div>
 
   <script>
+    window.onerror = function(msg, url, line) {
+      alert("Ошибка JS: " + msg + "\nСтрока: " + line);
+      return false;
+    };
+
     let supabase = null;
     let currentUser = null;
     let notes = [];
@@ -318,29 +318,47 @@
 
     async function initApp() {
       try {
+        // 1. Загрузка конфигурации
         const configRes = await fetch('/api/config');
-        const config = await configRes.json();
-        supabase = supabaseClient.createClient(config.supabaseUrl, config.supabaseAnonKey);
-      } catch (e) {
-        console.error("Ошибка загрузки конфигурации", e);
-        return;
-      }
+        if (!configRes.ok) {
+          alert("Ошибка /api/config: HTTP " + configRes.status);
+        } else {
+          const config = await configRes.json();
+          const supabaseLib = window.supabase || window.supabaseClient;
+          if (supabaseLib && config.supabaseUrl && config.supabaseAnonKey) {
+            supabase = supabaseLib.createClient(config.supabaseUrl, config.supabaseAnonKey);
+          } else {
+            alert("Ошибка: Supabase SDK не загружен или ключи пустые.");
+          }
+        }
 
-      const initData = tg?.initData;
-      if (initData) {
-        try {
+        // 2. Валидация Telegram
+        const initData = tg?.initData;
+        if (!initData) {
+          alert("Telegram initData пустой. Открыто не через WebApp бота.");
+        } else {
           const res = await fetch('/api/telegram-auth', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ initData })
           });
-          const data = await res.json();
-          if (data.user) currentUser = data.user;
-        } catch (e) {
-          console.error("Ошибка авторизации TG, переход в гостевой режим", e);
+
+          const authData = await res.json();
+
+          if (!res.ok) {
+            alert("Ошибка /api/telegram-auth (" + res.status + "): " + JSON.stringify(authData));
+          } else if (authData.user) {
+            currentUser = authData.user;
+            alert("Успешный вход! ID: " + currentUser.telegram_id);
+          } else {
+            alert("Авторизация не вернула пользователя: " + JSON.stringify(authData));
+          }
         }
+      } catch (e) {
+        alert("Исключение в initApp: " + e.message);
       }
 
+      // 3. Гостевой фолбэк
       if (!currentUser) {
         document.getElementById('userBadge').style.display = 'block';
         let localGuestId = sessionStorage.getItem('guest_id');
@@ -355,7 +373,7 @@
     }
 
     async function loadNotes() {
-      if (currentUser.is_guest) {
+      if (currentUser.is_guest || !supabase) {
         const raw = sessionStorage.getItem('guest_notes');
         notes = raw ? JSON.parse(raw) : [];
       } else {
@@ -410,8 +428,8 @@
 
       if (noteId) {
         const note = notes.find(n => n.id === noteId);
-        titleInput.value = note.title || '';
-        contentInput.value = note.content || '';
+        titleInput.value = note ? (note.title || '') : '';
+        contentInput.value = note ? (note.content || '') : '';
       } else {
         titleInput.value = '';
         contentInput.value = '';
@@ -444,7 +462,7 @@
 
       const now = new Date().toISOString();
 
-      if (currentUser.is_guest) {
+      if (currentUser.is_guest || !supabase) {
         if (!currentNoteId) {
           currentNoteId = 'local_' + Date.now();
           notes.unshift({ id: currentNoteId, user_id: currentUser.id, title, content, updated_at: now });
@@ -478,7 +496,7 @@
       
       triggerHaptic('notification', 'warning');
       
-      if (currentUser.is_guest) {
+      if (currentUser.is_guest || !supabase) {
         notes = notes.filter(n => n.id !== currentNoteId);
         sessionStorage.setItem('guest_notes', JSON.stringify(notes));
       } else {
