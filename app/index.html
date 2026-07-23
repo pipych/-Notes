@@ -168,6 +168,7 @@
       transform: scale(0.94);
     }
 
+    /* Исправленный оверлей */
     .editor-screen {
       position: fixed;
       inset: 0;
@@ -177,11 +178,15 @@
       display: flex;
       flex-direction: column;
       transform: translateY(100%);
-      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+      visibility: hidden;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s;
     }
 
     .editor-screen.active {
       transform: translateY(0);
+      pointer-events: auto;
+      visibility: visible;
     }
 
     .editor-topbar {
@@ -318,7 +323,6 @@
 
     async function initApp() {
       try {
-        // 1. Загрузка конфигурации
         const configRes = await fetch('/api/config');
         if (!configRes.ok) {
           alert("Ошибка /api/config: HTTP " + configRes.status);
@@ -327,16 +331,11 @@
           const supabaseLib = window.supabase || window.supabaseClient;
           if (supabaseLib && config.supabaseUrl && config.supabaseAnonKey) {
             supabase = supabaseLib.createClient(config.supabaseUrl, config.supabaseAnonKey);
-          } else {
-            alert("Ошибка: Supabase SDK не загружен или ключи пустые.");
           }
         }
 
-        // 2. Валидация Telegram
         const initData = tg?.initData;
-        if (!initData) {
-          alert("Telegram initData пустой. Открыто не через WebApp бота.");
-        } else {
+        if (initData) {
           const res = await fetch('/api/telegram-auth', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -349,16 +348,12 @@
             alert("Ошибка /api/telegram-auth (" + res.status + "): " + JSON.stringify(authData));
           } else if (authData.user) {
             currentUser = authData.user;
-            alert("Успешный вход! ID: " + currentUser.telegram_id);
-          } else {
-            alert("Авторизация не вернула пользователя: " + JSON.stringify(authData));
           }
         }
       } catch (e) {
         alert("Исключение в initApp: " + e.message);
       }
 
-      // 3. Гостевой фолбэк
       if (!currentUser) {
         document.getElementById('userBadge').style.display = 'block';
         let localGuestId = sessionStorage.getItem('guest_id');
