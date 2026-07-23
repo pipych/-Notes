@@ -3,13 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
   <title>Мысли</title>
-  
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
   <style>
     :root {
@@ -19,9 +14,8 @@
       --text-main: #ededed;
       --text-muted: #8e8e93;
       --danger: #ff453a;
-      --radius-card: 24px;
+      --radius-card: 20px;
       --radius-pill: 9999px;
-      --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.45);
       --border-subtle: 1px solid rgba(255, 255, 255, 0.08);
     }
 
@@ -30,7 +24,7 @@
       margin: 0;
       padding: 0;
       -webkit-tap-highlight-color: transparent;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
     }
 
     body {
@@ -40,7 +34,6 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      overflow-x: hidden;
     }
 
     .header {
@@ -53,7 +46,6 @@
     .app-title {
       font-size: 28px;
       font-weight: 700;
-      letter-spacing: -0.5px;
     }
 
     .status-bar {
@@ -73,15 +65,6 @@
       border-radius: var(--radius-pill);
       padding: 12px 18px;
       margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      box-shadow: var(--shadow-float);
-    }
-
-    .search-box svg {
-      color: var(--text-muted);
-      flex-shrink: 0;
     }
 
     .search-box input {
@@ -105,12 +88,7 @@
       border: var(--border-subtle);
       border-radius: var(--radius-card);
       padding: 18px 20px;
-      box-shadow: var(--shadow-float);
       cursor: pointer;
-    }
-
-    .note-card:active {
-      background: var(--bg-card-hover);
     }
 
     .note-card-title {
@@ -147,11 +125,7 @@
       padding: 14px 22px;
       font-size: 15px;
       font-weight: 600;
-      box-shadow: 0 10px 25px rgba(255, 255, 255, 0.2);
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
       z-index: 50;
     }
 
@@ -179,17 +153,11 @@
       padding: 10px 16px;
       border-radius: var(--radius-pill);
       font-size: 14px;
-      font-weight: 500;
       cursor: pointer;
     }
 
     .btn-danger {
       color: var(--danger);
-    }
-
-    .save-status {
-      font-size: 12px;
-      color: var(--text-muted);
     }
 
     .editor-title {
@@ -230,24 +198,20 @@
     <div class="app-title">Мысли</div>
   </div>
 
-  <div id="statusBar" class="status-bar">Старт...</div>
+  <div id="statusBar" class="status-bar">Инициализация...</div>
 
   <div class="search-box">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
     <input type="text" id="searchInput" placeholder="Поиск по трекам..." oninput="renderNotes()">
   </div>
 
   <div id="notesList" class="notes-list"></div>
 
-  <button id="btnNewTrack" class="btn-float">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-    <span>Новый трек</span>
-  </button>
+  <button id="btnNewTrack" class="btn-float">＋ Новый трек</button>
 
   <div id="editorScreen" class="editor-screen">
     <div class="editor-topbar">
       <button class="btn-pill" id="btnBack">Назад</button>
-      <span id="saveStatus" class="save-status">Сохранено</span>
+      <span id="saveStatus" style="font-size:12px; color:var(--text-muted);">Сохранено</span>
       <button class="btn-pill btn-danger" id="btnDelete">Удалить</button>
     </div>
     <input type="text" id="noteTitle" class="editor-title" placeholder="Название трека" oninput="handleAutoSave()">
@@ -255,120 +219,103 @@
   </div>
 
   <script>
-    window.onerror = function(msg, url, line) {
-      const el = document.getElementById('statusBar');
-      if (el) el.innerText = "Ошибка JS: " + msg + " (стр. " + line + ")";
-      return false;
-    };
-
     const SUPABASE_URL = "https://sxdswgoqgvkmddknqzir.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_7_PN5q0F5n9wdnnSm4xiLQ_vHEftQL9";
+    const SUPABASE_KEY = "sb_publishable_7_PN5q0F5n9wdnnSm4xiLQ_vHEftQL9";
 
-    let supabase = null;
     let currentUser = null;
     let notes = [];
     let currentNoteId = null;
     let autoSaveTimer = null;
 
-    function setStatus(text) {
-      const el = document.getElementById('statusBar');
-      if (el) el.innerText = text;
+    function setStatus(txt) {
+      document.getElementById('statusBar').innerText = txt;
     }
 
-    document.getElementById('btnNewTrack').onclick = function() { openEditor(); };
-    document.getElementById('btnBack').onclick = function() { closeEditor(); };
-    document.getElementById('btnDelete').onclick = function() { deleteCurrentNote(); };
-
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-      try {
-        tg.ready();
-        tg.expand();
-      } catch(e) {}
-    }
-
-    async function initApp() {
-      setStatus("Инициализация Supabase...");
-
-      try {
-        if (window.supabase?.createClient) {
-          supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        } else {
-          setStatus("Ошибка: библиотека Supabase не подгрузилась");
-        }
-      } catch (e) {
-        setStatus("Ошибка инициализации Supabase: " + e.message);
+    // Прямые запросы к REST API Supabase без сторонних библиотек
+    async function supabaseFetch(path, options = {}) {
+      const headers = {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+      };
+      const response = await fetch(SUPABASE_URL + '/rest/v1' + path, { ...options, headers });
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`[${response.status}] ${errText}`);
       }
+      if (response.status === 204) return null;
+      return await response.json();
+    }
 
-      const tgUser = tg?.initDataUnsafe?.user;
+    document.getElementById('btnNewTrack').onclick = () => openEditor();
+    document.getElementById('btnBack').onclick = () => closeEditor();
+    document.getElementById('btnDelete').onclick = () => deleteCurrentNote();
 
-      if (tgUser && supabase) {
-        setStatus("Запрос к базе Supabase...");
-        try {
-          let { data: profile, error: selectErr } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('telegram_id', tgUser.id)
-            .maybeSingle();
+    async function init() {
+      try {
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+          tg.ready();
+          tg.expand();
+        }
 
-          if (selectErr) {
-            setStatus("Ошибка БД (Select): " + selectErr.message);
-          }
+        const tgUser = tg?.initDataUnsafe?.user;
+
+        if (tgUser) {
+          setStatus("Подключение к Supabase...");
+          
+          let profiles = await supabaseFetch(`/profiles?telegram_id=eq.${tgUser.id}&select=*`);
+          let profile = profiles && profiles.length > 0 ? profiles[0] : null;
 
           if (!profile) {
             setStatus("Создание профиля...");
-            const { data: newProfile, error: insErr } = await supabase
-              .from('profiles')
-              .insert({
+            let created = await supabaseFetch('/profiles', {
+              method: 'POST',
+              headers: { 'Prefer': 'return=representation' },
+              body: JSON.stringify({
                 telegram_id: tgUser.id,
                 first_name: tgUser.first_name || '',
                 username: tgUser.username || '',
                 is_guest: false
               })
-              .select()
-              .single();
-
-            if (insErr) {
-              setStatus("Ошибка БД (Insert): " + insErr.message);
-            } else {
-              profile = newProfile;
-            }
+            });
+            profile = created ? created[0] : null;
           }
 
           if (profile) {
             currentUser = profile;
-            setStatus("Профиль создан/найден: ID " + profile.telegram_id);
+            setStatus("Авторизован: " + (profile.first_name || profile.telegram_id));
           }
-        } catch (err) {
-          setStatus("Исключение БД: " + err.message);
         }
-      } else if (!tgUser) {
-        setStatus("Гостевой режим (запуск вне Telegram)");
-      }
 
-      if (!currentUser) {
-        let localGuestId = sessionStorage.getItem('guest_id');
-        if (!localGuestId) {
-          localGuestId = 'guest_' + Math.random().toString(36).substr(2, 9);
-          sessionStorage.setItem('guest_id', localGuestId);
+        if (!currentUser) {
+          let localGuestId = sessionStorage.getItem('guest_id');
+          if (!localGuestId) {
+            localGuestId = 'guest_' + Math.random().toString(36).substr(2, 9);
+            sessionStorage.setItem('guest_id', localGuestId);
+          }
+          currentUser = { id: localGuestId, is_guest: true };
+          setStatus("Гостевой режим");
         }
-        currentUser = { id: localGuestId, is_guest: true };
-      }
 
-      await loadNotes();
+        await loadNotes();
+
+      } catch (err) {
+        setStatus("Ошибка: " + err.message);
+      }
     }
 
     async function loadNotes() {
-      if (currentUser.is_guest || !supabase) {
+      if (currentUser.is_guest) {
         const raw = sessionStorage.getItem('guest_notes');
         notes = raw ? JSON.parse(raw) : [];
       } else {
-        const { data, error } = await supabase
-          .from('notes')
-          .select('*')
-          .eq('user_id', currentUser.id)
-          .order('updated_at', { ascending: false });
-        if (!error) notes = data || [];
+        try {
+          notes = await supabaseFetch(`/notes?user_id=eq.${currentUser.id}&order=updated_at.desc&select=*`) || [];
+        } catch (e) {
+          setStatus("Ошибка загрузки заметок: " + e.message);
+        }
       }
       renderNotes();
     }
@@ -384,12 +331,12 @@
       );
 
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="empty-state">Заметок пока нет.<br>Нажми «Новый трек», чтобы записать текст.</div>`;
+        container.innerHTML = `<div class="empty-state">Заметок нет.<br>Нажми «Новый трек», чтобы написать.</div>`;
         return;
       }
 
       filtered.forEach(note => {
-        const dateStr = new Date(note.updated_at || note.created_at).toLocaleDateString('ru-RU', {
+        const dateStr = new Date(note.updated_at || note.created_at || Date.now()).toLocaleDateString('ru-RU', {
           day: 'numeric', month: 'short'
         });
 
@@ -446,7 +393,7 @@
 
       const now = new Date().toISOString();
 
-      if (currentUser.is_guest || !supabase) {
+      if (currentUser.is_guest) {
         if (!currentNoteId) {
           currentNoteId = 'local_' + Date.now();
           notes.unshift({ id: currentNoteId, user_id: currentUser.id, title, content, updated_at: now });
@@ -459,17 +406,17 @@
         sessionStorage.setItem('guest_notes', JSON.stringify(notes));
       } else {
         if (!currentNoteId) {
-          const { data } = await supabase
-            .from('notes')
-            .insert({ user_id: currentUser.id, title, content })
-            .select()
-            .single();
-          if (data) currentNoteId = data.id;
+          const res = await supabaseFetch('/notes', {
+            method: 'POST',
+            headers: { 'Prefer': 'return=representation' },
+            body: JSON.stringify({ user_id: currentUser.id, title, content })
+          });
+          if (res && res[0]) currentNoteId = res[0].id;
         } else {
-          await supabase
-            .from('notes')
-            .update({ title, content, updated_at: now })
-            .eq('id', currentNoteId);
+          await supabaseFetch(`/notes?id=eq.${currentNoteId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ title, content, updated_at: now })
+          });
         }
         await loadNotes();
       }
@@ -478,17 +425,17 @@
     async function deleteCurrentNote() {
       if (!currentNoteId) return closeEditor();
 
-      if (currentUser.is_guest || !supabase) {
+      if (currentUser.is_guest) {
         notes = notes.filter(n => n.id !== currentNoteId);
         sessionStorage.setItem('guest_notes', JSON.stringify(notes));
       } else {
-        await supabase.from('notes').delete().eq('id', currentNoteId);
+        await supabaseFetch(`/notes?id=eq.${currentNoteId}`, { method: 'DELETE' });
         await loadNotes();
       }
       closeEditor();
     }
 
-    initApp();
+    init();
   </script>
 </body>
 </html>
