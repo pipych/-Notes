@@ -112,7 +112,8 @@
       overflow: hidden;
       background: transparent;
       animation: fadeIn 0.25s ease-out;
-      transition: max-height 0.3s ease, margin 0.3s ease, opacity 0.3s ease;
+      max-height: 200px;
+      transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), margin 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
     }
 
     .note-delete-bg {
@@ -126,7 +127,7 @@
       padding-right: 28px;
       color: #ffffff;
       opacity: 0;
-      transition: opacity 0.1s ease;
+      transition: opacity 0.15s ease;
       z-index: 1;
     }
 
@@ -490,26 +491,41 @@
             isHorizontalSwipe = true;
           }
 
-          if (isHorizontalSwipe && diffX < 0) {
-            currentTranslate = Math.max(diffX, -120);
-            deleteBg.style.opacity = '1';
-            card.style.transform = `translateX(${currentTranslate}px)`;
+          if (isHorizontalSwipe) {
+            if (diffX < 0) {
+              const raw = Math.abs(diffX);
+              const damped = raw > 70 ? 70 + (raw - 70) * 0.35 : raw;
+              currentTranslate = -damped;
+              deleteBg.style.opacity = Math.min(1, raw / 50);
+              card.style.transform = `translateX(${currentTranslate}px)`;
+            } else {
+              currentTranslate = diffX * 0.15;
+              card.style.transform = `translateX(${currentTranslate}px)`;
+            }
           }
         }, { passive: true });
 
         card.addEventListener('touchend', () => {
           if (!isTouchStarted) return;
           isTouchStarted = false;
-          card.style.transition = 'transform 0.2s ease';
 
-          if (currentTranslate < -70) {
-            card.style.transform = `translateX(-100%)`;
-            wrapper.style.opacity = '0';
-            wrapper.style.maxHeight = '0px';
-            wrapper.style.margin = '0';
-            setTimeout(() => deleteNoteById(note.id), 250);
+          if (currentTranslate < -75) {
+            card.style.transition = 'transform 0.2s cubic-bezier(0.4, 0, 1, 1)';
+            card.style.transform = 'translateX(-105%)';
+
+            setTimeout(() => {
+              wrapper.style.opacity = '0';
+              wrapper.style.maxHeight = '0px';
+              wrapper.style.marginBottom = '-12px';
+            }, 120);
+
+            setTimeout(() => {
+              wrapper.remove();
+              deleteNoteByIdSilent(note.id);
+            }, 420);
           } else {
-            card.style.transform = `translateX(0px)`;
+            card.style.transition = 'transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.25)';
+            card.style.transform = 'translateX(0px)';
             setTimeout(() => { deleteBg.style.opacity = '0'; }, 200);
           }
           currentTranslate = 0;
@@ -527,15 +543,17 @@
       });
     }
 
-    async function deleteNoteById(id) {
+    async function deleteNoteByIdSilent(id) {
+      notes = notes.filter(n => n.id !== id);
       if (currentUser.is_guest) {
-        notes = notes.filter(n => n.id !== id);
         sessionStorage.setItem('guest_notes', JSON.stringify(notes));
       } else {
         await supabaseFetch(`/notes?id=eq.${id}`, { method: 'DELETE' });
-        notes = notes.filter(n => n.id !== id);
       }
-      renderNotes();
+
+      if (notes.length === 0) {
+        document.getElementById('notesList').innerHTML = `<div class="empty-state">Треков нет.<br>Нажми «+», чтобы написать новый.</div>`;
+      }
     }
 
     function openEditor(noteId = null) {
