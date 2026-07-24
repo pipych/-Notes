@@ -201,7 +201,7 @@
       padding-right: 60px;
       word-break: break-word;
       display: -webkit-box;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 1;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
@@ -211,7 +211,7 @@
       color: var(--text-muted);
       line-height: 1.35;
       display: -webkit-box;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 1;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
@@ -581,6 +581,9 @@
         if (tg) {
           tg.ready();
           tg.expand();
+          if (typeof tg.requestFullscreen === 'function') {
+            tg.requestFullscreen();
+          }
           if (tg.initData || (tg.platform && tg.platform !== 'unknown')) {
             document.body.classList.add('in-tg');
           }
@@ -763,8 +766,19 @@
           });
 
           const hasExplicitTitle = note.title && note.title.trim() !== '';
-          const titleText = hasExplicitTitle ? note.title : (note.content || 'Пустой текст...');
-          const previewText = hasExplicitTitle ? (note.content || '') : '';
+          let titleText = '';
+          let previewText = '';
+
+          if (hasExplicitTitle) {
+            titleText = note.title;
+            if (note.content) {
+              previewText = note.content.split(/\r?\n/)[0];
+            }
+          } else {
+            const fullContent = note.content || 'Пустой текст...';
+            titleText = fullContent.split(/\r?\n/)[0];
+            previewText = '';
+          }
 
           const wrapper = document.createElement('div');
           wrapper.className = 'note-wrapper';
