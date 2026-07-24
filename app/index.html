@@ -34,7 +34,6 @@
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
     }
 
-    /* Soft Aurora Background */
     .aurora-bg {
       position: fixed;
       inset: 0;
@@ -1030,8 +1029,8 @@
           <div class="empty-state">
             <div class="empty-state-icon">
               <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                <path d="M22 3h-6a4 4 0 0 4 4v14a3 3 0 0 1 3-3h7z"/>
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
               </svg>
             </div>
             <div class="empty-state-text">
@@ -1293,7 +1292,6 @@
       closeEditor();
     }
 
-    /* AI Chat UI & Logic */
     function formatRhymesText(text) {
       if (!text) return '';
       const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
@@ -1345,7 +1343,7 @@
       const loadingMsg = appendChatMessageUI('bot', `<div class="dots-bounce"><span></span><span></span><span></span></div>`);
 
       try {
-        const systemInstruction = "Ты — гениальный поэт и рифмоплет. Твоя задача — подбирать сочные, идеальные и современные рифмы. КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО использовать форматирование Markdown (никакого жирного шрифта **, никаких звездочек, курсива, заголовков). Запрещено писать любые приветствия, комментарии, вводные или заключительные слова. Выдавай ИСКЛЮЧИТЕЛЬНО нумерованный чистый список рифм (или чистый список ответов по смыслу без разметки и без лишних слов). Каждый пункт списка пиши с новой строки.";
+        const systemInstruction = "Ты — гениальный поэт и рифмоплет. Твоя задача — подбирать сочные, идеальные и современные рифмы. КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО использовать форматирование Markdown (никакого жирного шрифта **, никаких звездочек, заголовков). Запрещено писать любые приветствия, комментарии, вводные или заключительные слова. Выдавай ИСКЛЮЧИТЕЛЬНО нумерованный чистый список рифм (или чистый список ответов по смыслу без разметки и без лишних слов). Каждый пункт списка пиши с новой строки.";
 
         const response = await fetch('/api/rhymes', {
           method: 'POST',
