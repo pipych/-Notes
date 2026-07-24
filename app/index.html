@@ -61,7 +61,7 @@
     body {
       background-color: var(--bg-app);
       color: var(--text-main);
-      padding: 16px 16px calc(env(safe-area-inset-bottom) + 24px) 16px;
+      padding: 16px 16px calc(env(safe-area-inset-bottom) + 90px) 16px;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -215,7 +215,7 @@
 
     .btn-float-icon {
       position: fixed;
-      bottom: calc(env(safe-area-inset-bottom) + 36px);
+      bottom: calc(env(safe-area-inset-bottom) + 84px);
       right: 20px;
       width: 56px;
       height: 56px;
@@ -239,6 +239,46 @@
 
     .btn-float-icon:active {
       transform: scale(0.92);
+    }
+
+    /* Плавник-навигация (Bottom Pill Navbar) */
+    .bottom-nav-container {
+      position: fixed;
+      bottom: calc(env(safe-area-inset-bottom) + 20px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(22, 22, 28, 0.85);
+      border: var(--glass-border);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+      border-radius: var(--radius-pill);
+      padding: 5px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      z-index: 45;
+    }
+
+    .nav-tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--radius-pill);
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease;
+      user-select: none;
+    }
+
+    .nav-tab.active {
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--text-main);
+    }
+
+    .nav-tab:active {
+      transform: scale(0.96);
     }
 
     .editor-screen, .profile-screen {
@@ -324,9 +364,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      flex: 1;
-      margin-top: 80px;
+      justify-content: flex-start;
+      padding-top: 32px;
       color: var(--text-muted);
       text-align: center;
       gap: 12px;
@@ -407,6 +446,18 @@
 
   <div id="notesList" class="notes-list"></div>
 
+  <!-- Плавающий навигационный пил -->
+  <div class="bottom-nav-container">
+    <div class="nav-tab active" id="tabTracks">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      <span>Треки</span>
+    </div>
+    <div class="nav-tab" id="tabDrafts">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      <span>Наброски</span>
+    </div>
+  </div>
+
   <button id="btnNewTrack" class="btn-float-icon">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
   </button>
@@ -452,6 +503,7 @@
     let notes = [];
     let currentNoteId = null;
     let autoSaveTimer = null;
+    let activeTab = 'tracks'; // 'tracks' | 'drafts'
 
     function setSaveState(state) {
       const container = document.getElementById('saveStatus');
@@ -483,6 +535,26 @@
     document.getElementById('btnDelete').onclick = () => deleteCurrentNote();
     document.getElementById('btnOpenProfile').onclick = () => openProfile();
     document.getElementById('btnProfileBack').onclick = () => closeProfile();
+
+    document.getElementById('tabTracks').onclick = () => switchTab('tracks');
+    document.getElementById('tabDrafts').onclick = () => switchTab('drafts');
+
+    function switchTab(tab) {
+      if (activeTab === tab) return;
+      activeTab = tab;
+
+      document.getElementById('tabTracks').classList.toggle('active', activeTab === 'tracks');
+      document.getElementById('tabDrafts').classList.toggle('active', activeTab === 'drafts');
+
+      const searchInput = document.getElementById('searchInput');
+      if (activeTab === 'tracks') {
+        searchInput.placeholder = 'Поиск по трекам...';
+      } else {
+        searchInput.placeholder = 'Поиск по наброскам...';
+      }
+
+      renderNotes();
+    }
 
     async function init() {
       try {
@@ -592,9 +664,9 @@
       return 'Ранее';
     }
 
-    function updatePulseState() {
+    function updatePulseState(currentCategoryEmpty) {
       const btn = document.getElementById('btnNewTrack');
-      if (notes.length === 0) {
+      if (currentCategoryEmpty) {
         btn.classList.add('pulse');
       } else {
         btn.classList.remove('pulse');
@@ -606,14 +678,23 @@
       const container = document.getElementById('notesList');
       container.innerHTML = '';
 
-      updatePulseState();
+      // Разделение: Трек = есть заголовок, Набросок = нет заголовка
+      const tabFiltered = notes.filter(n => {
+        const hasTitle = n.title && n.title.trim() !== '';
+        return activeTab === 'tracks' ? hasTitle : !hasTitle;
+      });
 
-      const filtered = notes.filter(n => 
+      const filtered = tabFiltered.filter(n => 
         (n.title && n.title.toLowerCase().includes(query)) || 
         (n.content && n.content.toLowerCase().includes(query))
       );
 
+      updatePulseState(tabFiltered.length === 0);
+
       if (filtered.length === 0) {
+        const emptyText = activeTab === 'tracks' ? 'Треков пока нет' : 'Набросков пока нет';
+        const emptySub = activeTab === 'tracks' ? 'написать трек' : 'создать набросок';
+
         container.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon">
@@ -623,8 +704,8 @@
               </svg>
             </div>
             <div class="empty-state-text">
-              Треков пока нет<br>
-              Нажми на <span class="inline-plus-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span> чтобы написать трек
+              ${emptyText}<br>
+              Нажми на <span class="inline-plus-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span> чтобы ${emptySub}
             </div>
           </div>
         `;
@@ -769,9 +850,7 @@
         await supabaseFetch(`/notes?id=eq.${id}`, { method: 'DELETE' });
       }
 
-      if (notes.length === 0) {
-        renderNotes();
-      }
+      renderNotes();
     }
 
     function openEditor(noteId = null) {
