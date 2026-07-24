@@ -11,8 +11,8 @@
       --bg-app: #08080a;
       --card-bg: #16161c;
       --card-bg-active: #22222a;
-      --glass-border: 1px solid rgba(255, 255, 255, 0.1);
-      --glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+      --glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
       
       --text-main: #ededed;
       --text-muted: #8e8e93;
@@ -98,20 +98,20 @@
     .note-group {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 2px;
     }
 
     .section-title {
       font-size: 20px;
       font-weight: 700;
       color: var(--text-main);
-      margin: 4px 0 4px 4px;
+      margin: 4px 0 8px 4px;
       letter-spacing: -0.4px;
     }
 
     .note-wrapper {
       position: relative;
-      border-radius: var(--radius-card);
+      border-radius: 6px;
       overflow: hidden;
       background: transparent;
       animation: fadeIn 0.25s ease-out;
@@ -119,11 +119,25 @@
       transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), margin 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
     }
 
+    .note-group .note-wrapper:first-of-type {
+      border-top-left-radius: var(--radius-card);
+      border-top-right-radius: var(--radius-card);
+    }
+
+    .note-group .note-wrapper:last-of-type {
+      border-bottom-left-radius: var(--radius-card);
+      border-bottom-right-radius: var(--radius-card);
+    }
+
+    .note-group .note-wrapper:only-of-type {
+      border-radius: var(--radius-card);
+    }
+
     .note-delete-bg {
       position: absolute;
       inset: 0;
       background: var(--danger);
-      border-radius: var(--radius-card);
+      border-radius: inherit;
       display: flex;
       align-items: center;
       justify-content: flex-end;
@@ -139,7 +153,7 @@
       background: var(--card-bg);
       border: var(--glass-border);
       box-shadow: var(--glass-shadow);
-      border-radius: var(--radius-card);
+      border-radius: inherit;
       padding: 18px 20px;
       cursor: pointer;
       user-select: none;
@@ -631,7 +645,7 @@
               setTimeout(() => {
                 wrapper.style.opacity = '0';
                 wrapper.style.maxHeight = '0px';
-                wrapper.style.marginBottom = '-12px';
+                wrapper.style.marginBottom = '-2px';
               }, 120);
 
               setTimeout(() => {
