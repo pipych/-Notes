@@ -61,7 +61,7 @@
     body {
       background-color: var(--bg-app);
       color: var(--text-main);
-      padding: 16px 16px calc(env(safe-area-inset-bottom) + 105px) 16px;
+      padding: 16px 16px calc(env(safe-area-inset-bottom) + 115px) 16px;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -227,7 +227,7 @@
 
     .btn-float-icon {
       position: fixed;
-      bottom: calc(env(safe-area-inset-bottom) + 96px);
+      bottom: calc(env(safe-area-inset-bottom) + 108px);
       right: 20px;
       width: 56px;
       height: 56px;
@@ -255,7 +255,7 @@
 
     .bottom-nav-container {
       position: fixed;
-      bottom: calc(env(safe-area-inset-bottom) + 16px);
+      bottom: calc(env(safe-area-inset-bottom) + 28px);
       left: 50%;
       transform: translateX(-50%);
       background: rgba(22, 22, 28, 0.88);
@@ -522,7 +522,7 @@
     let notes = [];
     let currentNoteId = null;
     let autoSaveTimer = null;
-    let activeTab = 'tracks'; // 'tracks' | 'drafts'
+    let activeTab = 'tracks';
 
     function setSaveState(state) {
       const container = document.getElementById('saveStatus');
