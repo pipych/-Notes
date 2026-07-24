@@ -485,7 +485,6 @@
       font-size: 14px;
       line-height: 1.45;
       word-break: break-word;
-      white-space: pre-wrap;
     }
 
     .ai-message.user {
@@ -501,6 +500,22 @@
       border: var(--glass-border);
       color: var(--text-main);
       border-bottom-left-radius: 4px;
+    }
+
+    .rhyme-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 5px;
+    }
+
+    .rhyme-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .rhyme-spark-icon {
+      color: rgba(255, 255, 255, 0.7);
+      flex-shrink: 0;
     }
 
     .ai-chat-input-container {
@@ -711,6 +726,7 @@
     let currentChatHistory = [];
 
     const DEFAULT_WELCOME_MSG = "Привет! Напиши слово, и я подберу 10 лучших рифм для твоего трека. Если нужны рифмы, близкие по смыслу, просто уточни в запросе!";
+    const SPARK_SVG = `<svg class="rhyme-spark-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/></svg>`;
 
     function setSaveState(state) {
       const container = document.getElementById('saveStatus');
@@ -1175,6 +1191,17 @@
     }
 
     /* AI Chat UI & Logic */
+    function formatRhymesText(text) {
+      if (!text) return '';
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+      
+      if (lines.length <= 1 && !lines[0]?.match(/^\d+[\.\)]/)) {
+        return text;
+      }
+
+      return lines.map(line => `<div class="rhyme-item">${SPARK_SVG}<span>${line}</span></div>`).join('');
+    }
+
     function renderChatUI() {
       const chatContainer = document.getElementById('aiChatMessages');
       chatContainer.innerHTML = '';
@@ -1185,7 +1212,10 @@
         currentChatHistory.forEach(msg => {
           const role = msg.role === 'user' ? 'user' : 'bot';
           const text = msg.parts?.[0]?.text || '';
-          if (text) appendChatMessageUI(role, text);
+          if (text) {
+            const content = role === 'bot' ? formatRhymesText(text) : text;
+            appendChatMessageUI(role, content);
+          }
         });
       }
     }
@@ -1213,7 +1243,7 @@
       const loadingMsg = appendChatMessageUI('bot', `<div class="dots-bounce"><span></span><span></span><span></span></div>`);
 
       try {
-        const systemInstruction = "Ты — гениальный поэт и рифмоплет. Твоя задача — подбирать сочные, идеальные и современные рифмы. КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО использовать форматирование Markdown (никакого жирного шрифта **, никаких звездочек, курсива, заголовков). Запрещено писать любые приветствия, комментарии, вводные или заключительные слова. Выдавай ИСКЛЮЧИТЕЛЬНО нумерованный чистый список рифм (или чистый список ответов по смыслу без разметки и без лишних слов).";
+        const systemInstruction = "Ты — гениальный поэт и рифмоплет. Твоя задача — подбирать сочные, идеальные и современные рифмы. КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО использовать форматирование Markdown (никакого жирного шрифта **, никаких звездочек, курсива, заголовков). Запрещено писать любые приветствия, комментарии, вводные или заключительные слова. Выдавай ИСКЛЮЧИТЕЛЬНО нумерованный чистый список рифм (или чистый список ответов по смыслу без разметки и без лишних слов). Каждый пункт списка пиши с новой строки.";
 
         const response = await fetch('/api/rhymes', {
           method: 'POST',
@@ -1233,7 +1263,7 @@
 
         replyText = replyText.replace(/\*\*/g, '').replace(/\*/g, '');
 
-        loadingMsg.innerText = replyText;
+        loadingMsg.innerHTML = formatRhymesText(replyText);
         currentChatHistory.push({ role: 'model', parts: [{ text: replyText }] });
 
         handleAutoSave();
