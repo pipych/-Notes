@@ -91,8 +91,22 @@
     .notes-list {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 16px;
       flex: 1;
+    }
+
+    .note-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin: 4px 0 2px 6px;
+      letter-spacing: 0.2px;
     }
 
     .note-wrapper {
@@ -485,6 +499,27 @@
       renderNotes();
     }
 
+    function getDateCategory(dateString) {
+      const now = new Date();
+      const noteDate = new Date(dateString || Date.now());
+
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const startOfYesterday = new Date(startOfToday);
+      startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+      
+      const startOf7Days = new Date(startOfToday);
+      startOf7Days.setDate(startOf7Days.getDate() - 7);
+
+      const startOf30Days = new Date(startOfToday);
+      startOf30Days.setDate(startOf30Days.getDate() - 30);
+
+      if (noteDate >= startOfToday) return 'Сегодня';
+      if (noteDate >= startOfYesterday) return 'Вчера';
+      if (noteDate >= startOf7Days) return 'Предыдущие 7 дней';
+      if (noteDate >= startOf30Days) return 'Предыдущие 30 дней';
+      return 'Ранее';
+    }
+
     function renderNotes() {
       const query = document.getElementById('searchInput').value.toLowerCase();
       const container = document.getElementById('notesList');
@@ -500,100 +535,133 @@
         return;
       }
 
+      const groupsOrder = ['Сегодня', 'Вчера', 'Предыдущие 7 дней', 'Предыдущие 30 дней', 'Ранее'];
+      const groupedNotes = {
+        'Сегодня': [],
+        'Вчера': [],
+        'Предыдущие 7 дней': [],
+        'Предыдущие 30 дней': [],
+        'Ранее': []
+      };
+
       filtered.forEach(note => {
-        const dateStr = new Date(note.updated_at || note.created_at || Date.now()).toLocaleDateString('ru-RU', {
-          day: 'numeric', month: 'short'
-        });
+        const cat = getDateCategory(note.updated_at || note.created_at);
+        groupedNotes[cat].push(note);
+      });
 
-        const wrapper = document.createElement('div');
-        wrapper.className = 'note-wrapper';
+      groupsOrder.forEach(category => {
+        const list = groupedNotes[category];
+        if (list.length === 0) return;
 
-        const deleteBg = document.createElement('div');
-        deleteBg.className = 'note-delete-bg';
-        deleteBg.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
+        const groupEl = document.createElement('div');
+        groupEl.className = 'note-group';
 
-        const card = document.createElement('div');
-        card.className = 'note-card';
-        card.innerHTML = `
-          <div class="note-card-title">${note.title || 'Без названия'}</div>
-          <div class="note-card-preview">${note.content || 'Пустой текст...'}</div>
-          <div class="note-card-date">${dateStr}</div>
-        `;
+        const titleEl = document.createElement('div');
+        titleEl.className = 'section-title';
+        titleEl.innerText = category;
+        groupEl.appendChild(titleEl);
 
-        let startX = 0;
-        let startY = 0;
-        let currentTranslate = 0;
-        let isTouchStarted = false;
-        let isHorizontalSwipe = false;
+        list.forEach(note => {
+          const dateStr = new Date(note.updated_at || note.created_at || Date.now()).toLocaleDateString('ru-RU', {
+            day: 'numeric', month: 'short'
+          });
 
-        card.addEventListener('touchstart', (e) => {
-          startX = e.touches[0].clientX;
-          startY = e.touches[0].clientY;
-          isTouchStarted = true;
-          isHorizontalSwipe = false;
-          card.style.transition = 'none';
-        }, { passive: true });
+          const wrapper = document.createElement('div');
+          wrapper.className = 'note-wrapper';
 
-        card.addEventListener('touchmove', (e) => {
-          if (!isTouchStarted) return;
-          const touchX = e.touches[0].clientX;
-          const touchY = e.touches[0].clientY;
-          const diffX = touchX - startX;
-          const diffY = touchY - startY;
+          const deleteBg = document.createElement('div');
+          deleteBg.className = 'note-delete-bg';
+          deleteBg.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
 
-          if (!isHorizontalSwipe && Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 8) {
-            isHorizontalSwipe = true;
-          }
+          const card = document.createElement('div');
+          card.className = 'note-card';
+          card.innerHTML = `
+            <div class="note-card-title">${note.title || 'Без названия'}</div>
+            <div class="note-card-preview">${note.content || 'Пустой текст...'}</div>
+            <div class="note-card-date">${dateStr}</div>
+          `;
 
-          if (isHorizontalSwipe) {
-            if (diffX < 0) {
-              const raw = Math.abs(diffX);
-              const damped = raw > 70 ? 70 + (raw - 70) * 0.35 : raw;
-              currentTranslate = -damped;
-              deleteBg.style.opacity = Math.min(1, raw / 50);
-              card.style.transform = `translateX(${currentTranslate}px)`;
-            } else {
-              currentTranslate = diffX * 0.15;
-              card.style.transform = `translateX(${currentTranslate}px)`;
+          let startX = 0;
+          let startY = 0;
+          let currentTranslate = 0;
+          let isTouchStarted = false;
+          let isHorizontalSwipe = false;
+
+          card.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            isTouchStarted = true;
+            isHorizontalSwipe = false;
+            card.style.transition = 'none';
+          }, { passive: true });
+
+          card.addEventListener('touchmove', (e) => {
+            if (!isTouchStarted) return;
+            const touchX = e.touches[0].clientX;
+            const touchY = e.touches[0].clientY;
+            const diffX = touchX - startX;
+            const diffY = touchY - startY;
+
+            if (!isHorizontalSwipe && Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 8) {
+              isHorizontalSwipe = true;
             }
-          }
-        }, { passive: true });
 
-        card.addEventListener('touchend', () => {
-          if (!isTouchStarted) return;
-          isTouchStarted = false;
+            if (isHorizontalSwipe) {
+              if (diffX < 0) {
+                const raw = Math.abs(diffX);
+                const damped = raw > 70 ? 70 + (raw - 70) * 0.35 : raw;
+                currentTranslate = -damped;
+                deleteBg.style.opacity = Math.min(1, raw / 50);
+                card.style.transform = `translateX(${currentTranslate}px)`;
+              } else {
+                currentTranslate = diffX * 0.15;
+                card.style.transform = `translateX(${currentTranslate}px)`;
+              }
+            }
+          }, { passive: true });
 
-          if (currentTranslate < -75) {
-            card.style.transition = 'transform 0.2s cubic-bezier(0.4, 0, 1, 1)';
-            card.style.transform = 'translateX(-105%)';
+          card.addEventListener('touchend', () => {
+            if (!isTouchStarted) return;
+            isTouchStarted = false;
 
-            setTimeout(() => {
-              wrapper.style.opacity = '0';
-              wrapper.style.maxHeight = '0px';
-              wrapper.style.marginBottom = '-12px';
-            }, 120);
+            if (currentTranslate < -75) {
+              card.style.transition = 'transform 0.2s cubic-bezier(0.4, 0, 1, 1)';
+              card.style.transform = 'translateX(-105%)';
 
-            setTimeout(() => {
-              wrapper.remove();
-              deleteNoteByIdSilent(note.id);
-            }, 420);
-          } else {
-            card.style.transition = 'transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.25)';
-            card.style.transform = 'translateX(0px)';
-            setTimeout(() => { deleteBg.style.opacity = '0'; }, 200);
-          }
-          currentTranslate = 0;
+              setTimeout(() => {
+                wrapper.style.opacity = '0';
+                wrapper.style.maxHeight = '0px';
+                wrapper.style.marginBottom = '-12px';
+              }, 120);
+
+              setTimeout(() => {
+                const parentGroup = wrapper.closest('.note-group');
+                wrapper.remove();
+                if (parentGroup && !parentGroup.querySelector('.note-wrapper')) {
+                  parentGroup.remove();
+                }
+                deleteNoteByIdSilent(note.id);
+              }, 420);
+            } else {
+              card.style.transition = 'transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.25)';
+              card.style.transform = 'translateX(0px)';
+              setTimeout(() => { deleteBg.style.opacity = '0'; }, 200);
+            }
+            currentTranslate = 0;
+          });
+
+          card.addEventListener('click', () => {
+            if (!isHorizontalSwipe) {
+              openEditor(note.id);
+            }
+          });
+
+          wrapper.appendChild(deleteBg);
+          wrapper.appendChild(card);
+          groupEl.appendChild(wrapper);
         });
 
-        card.addEventListener('click', () => {
-          if (!isHorizontalSwipe) {
-            openEditor(note.id);
-          }
-        });
-
-        wrapper.appendChild(deleteBg);
-        wrapper.appendChild(card);
-        container.appendChild(wrapper);
+        container.appendChild(groupEl);
       });
     }
 
