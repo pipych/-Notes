@@ -92,6 +92,14 @@
       border-radius: var(--radius-pill);
       padding: 12px 18px;
       margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-box svg {
+      color: var(--text-muted);
+      flex-shrink: 0;
     }
 
     .search-box input {
@@ -245,7 +253,6 @@
       transform: scale(0.92);
     }
 
-    /* Увеличенный нижний навбар с вертикальным расположением */
     .bottom-nav-container {
       position: fixed;
       bottom: calc(env(safe-area-inset-bottom) + 16px);
@@ -292,7 +299,7 @@
       transform: scale(0.95);
     }
 
-    .editor-screen, .profile-screen {
+    .editor-screen, .profile-screen, .trash-screen {
       position: fixed;
       inset: 0;
       background: var(--bg-app);
@@ -303,7 +310,7 @@
       animation: fadeIn 0.2s ease-out;
     }
 
-    body.in-tg .editor-screen, body.in-tg .profile-screen {
+    body.in-tg .editor-screen, body.in-tg .profile-screen, body.in-tg .trash-screen {
       padding-top: calc(env(safe-area-inset-top) + 110px);
     }
 
@@ -413,9 +420,9 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      padding-top: 40px;
+      padding-top: 30px;
       flex: 1;
-      gap: 12px;
+      gap: 16px;
     }
 
     .profile-avatar-large {
@@ -428,7 +435,7 @@
       align-items: center;
       justify-content: center;
       color: var(--text-main);
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
 
     .profile-name-text {
@@ -439,6 +446,29 @@
     .profile-username-text {
       font-size: 14px;
       color: var(--text-muted);
+      margin-top: -10px;
+    }
+
+    .profile-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 340px;
+      background: var(--card-bg);
+      border: var(--glass-border);
+      border-radius: var(--radius-card);
+      padding: 16px 20px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--text-main);
+      transition: background 0.15s ease;
+      box-shadow: var(--glass-shadow);
+    }
+
+    .profile-menu-item:active {
+      background: var(--card-bg-active);
     }
   </style>
 </head>
@@ -452,6 +482,7 @@
   </div>
 
   <div class="search-box">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input type="text" id="searchInput" placeholder="Поиск по трекам..." oninput="renderNotes()">
   </div>
 
@@ -503,7 +534,28 @@
       </div>
       <div id="profileName" class="profile-name-text">Загрузка...</div>
       <div id="profileUsername" class="profile-username-text"></div>
+      
+      <div style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 20px;">
+        <div class="profile-menu-item" id="btnOpenTrash">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          <span>Корзина</span>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Экран корзины -->
+  <div id="trashScreen" class="trash-screen">
+    <div class="editor-topbar">
+      <button class="btn-icon" id="btnTrashBack">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div style="font-weight: 600; font-size: 16px;">Корзина</div>
+      <button class="btn-icon btn-danger" id="btnClearTrash" title="Удалить все">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </button>
+    </div>
+    <div id="trashList" class="notes-list" style="overflow-y: auto; flex: 1; padding-top: 10px;"></div>
   </div>
 
   <script>
@@ -546,6 +598,9 @@
     document.getElementById('btnDelete').onclick = () => deleteCurrentNote();
     document.getElementById('btnOpenProfile').onclick = () => openProfile();
     document.getElementById('btnProfileBack').onclick = () => closeProfile();
+    document.getElementById('btnOpenTrash').onclick = () => openTrash();
+    document.getElementById('btnTrashBack').onclick = () => closeTrash();
+    document.getElementById('btnClearTrash').onclick = () => clearTrash();
 
     document.getElementById('tabTracks').onclick = () => switchTab('tracks');
     document.getElementById('tabDrafts').onclick = () => switchTab('drafts');
@@ -640,6 +695,15 @@
       document.getElementById('profileScreen').style.display = 'none';
     }
 
+    function openTrash() {
+      document.getElementById('trashScreen').style.display = 'flex';
+      renderTrash();
+    }
+
+    function closeTrash() {
+      document.getElementById('trashScreen').style.display = 'none';
+    }
+
     async function loadNotes() {
       if (currentUser.is_guest) {
         const raw = sessionStorage.getItem('guest_notes');
@@ -651,7 +715,37 @@
           console.error(e);
         }
       }
+
+      // Проверка на авто-удаление из корзины старше 7 дней
+      await cleanupExpiredTrash();
       renderNotes();
+    }
+
+    async function cleanupExpiredTrash() {
+      const now = new Date();
+      const expired = notes.filter(n => {
+        if (!n.deleted_at) return false;
+        const deletedDate = new Date(n.deleted_at);
+        const diffDays = (now - deletedDate) / (1000 * 60 * 60 * 24);
+        return diffDays >= 7;
+      });
+
+      if (expired.length > 0) {
+        for (const note of expired) {
+          if (currentUser.is_guest) {
+            notes = notes.filter(n => n.id !== note.id);
+          } else {
+            try {
+              await supabaseFetch(`/notes?id=eq.${note.id}`, { method: 'DELETE' });
+            } catch (e) {
+              console.error(e);
+            }
+          }
+        }
+        if (currentUser.is_guest) {
+          sessionStorage.setItem('guest_notes', JSON.stringify(notes));
+        }
+      }
     }
 
     function getDateCategory(dateString) {
@@ -689,8 +783,11 @@
       const container = document.getElementById('notesList');
       container.innerHTML = '';
 
+      // Активные заметки (где deleted_at отсутствует или null)
+      const activeNotes = notes.filter(n => !n.deleted_at);
+
       // Разделение: Трек = есть заголовок, Набросок = нет заголовка
-      const tabFiltered = notes.filter(n => {
+      const tabFiltered = activeNotes.filter(n => {
         const hasTitle = n.title && n.title.trim() !== '';
         return activeTab === 'tracks' ? hasTitle : !hasTitle;
       });
@@ -832,7 +929,7 @@
                 if (parentGroup && !parentGroup.querySelector('.note-wrapper')) {
                   parentGroup.remove();
                 }
-                deleteNoteByIdSilent(note.id);
+                moveToTrash(note.id);
               }, 420);
             } else {
               card.style.transition = 'transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.25)';
@@ -857,14 +954,112 @@
       });
     }
 
-    async function deleteNoteByIdSilent(id) {
-      notes = notes.filter(n => n.id !== id);
+    function renderTrash() {
+      const container = document.getElementById('trashList');
+      container.innerHTML = '';
+
+      const trashNotes = notes.filter(n => n.deleted_at);
+
+      if (trashNotes.length === 0) {
+        container.innerHTML = `<div class="empty-state" style="margin-top: 60px;">Корзина пуста</div>`;
+        return;
+      }
+
+      trashNotes.forEach(note => {
+        const dateStr = new Date(note.deleted_at).toLocaleDateString('ru-RU', {
+          day: 'numeric', month: 'short'
+        });
+
+        const hasExplicitTitle = note.title && note.title.trim() !== '';
+        const titleText = hasExplicitTitle ? note.title : (note.content || 'Пустой текст...');
+        const previewText = hasExplicitTitle ? (note.content || '') : '';
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'note-wrapper';
+
+        const card = document.createElement('div');
+        card.className = 'note-card';
+        card.innerHTML = `
+          <div class="note-card-date">Удалено: ${dateStr}</div>
+          <div class="note-card-title">${titleText}</div>
+          ${previewText ? `<div class="note-card-preview">${previewText}</div>` : ''}
+        `;
+
+        card.addEventListener('click', () => {
+          // Восстановление при нажатии
+          restoreFromTrash(note.id);
+        });
+
+        wrapper.appendChild(card);
+        container.appendChild(wrapper);
+      });
+    }
+
+    async function moveToTrash(id) {
+      const now = new Date().toISOString();
+      const idx = notes.findIndex(n => n.id === id);
+      if (idx !== -1) {
+        notes[idx].deleted_at = now;
+      }
+
       if (currentUser.is_guest) {
         sessionStorage.setItem('guest_notes', JSON.stringify(notes));
       } else {
-        await supabaseFetch(`/notes?id=eq.${id}`, { method: 'DELETE' });
+        try {
+          await supabaseFetch(`/notes?id=eq.${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ deleted_at: now })
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      renderNotes();
+    }
+
+    async function restoreFromTrash(id) {
+      const idx = notes.findIndex(n => n.id === id);
+      if (idx !== -1) {
+        notes[idx].deleted_at = null;
       }
 
+      if (currentUser.is_guest) {
+        sessionStorage.setItem('guest_notes', JSON.stringify(notes));
+      } else {
+        try {
+          await supabaseFetch(`/notes?id=eq.${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ deleted_at: null })
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      renderTrash();
+      renderNotes();
+    }
+
+    async function clearTrash() {
+      if (!confirm("Хотите удалить все?")) return;
+
+      const trashNotes = notes.filter(n => n.deleted_at);
+      for (const note of trashNotes) {
+        if (currentUser.is_guest) {
+          notes = notes.filter(n => n.id !== note.id);
+        } else {
+          try {
+            await supabaseFetch(`/notes?id=eq.${note.id}`, { method: 'DELETE' });
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+
+      if (currentUser.is_guest) {
+        sessionStorage.setItem('guest_notes', JSON.stringify(notes));
+      }
+
+      renderTrash();
       renderNotes();
     }
 
@@ -912,7 +1107,7 @@
       if (currentUser.is_guest) {
         if (!currentNoteId) {
           currentNoteId = 'local_' + Date.now();
-          notes.unshift({ id: currentNoteId, user_id: currentUser.id, title, content, updated_at: now });
+          notes.unshift({ id: currentNoteId, user_id: currentUser.id, title, content, updated_at: now, deleted_at: null });
         } else {
           const idx = notes.findIndex(n => n.id === currentNoteId);
           if (idx !== -1) {
@@ -940,14 +1135,7 @@
 
     async function deleteCurrentNote() {
       if (!currentNoteId) return closeEditor();
-
-      if (currentUser.is_guest) {
-        notes = notes.filter(n => n.id !== currentNoteId);
-        sessionStorage.setItem('guest_notes', JSON.stringify(notes));
-      } else {
-        await supabaseFetch(`/notes?id=eq.${currentNoteId}`, { method: 'DELETE' });
-        await loadNotes();
-      }
+      moveToTrash(currentNoteId);
       closeEditor();
     }
 
