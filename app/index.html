@@ -920,13 +920,13 @@
                 wrapper.style.marginBottom = '-2px';
               }, 120);
 
-              setTimeout(() => {
+              setTimeout(async () => {
                 const parentGroup = wrapper.closest('.note-group');
                 wrapper.remove();
                 if (parentGroup && !parentGroup.querySelector('.note-wrapper')) {
                   parentGroup.remove();
                 }
-                moveToTrash(note.id);
+                await moveToTrash(note.id);
               }, 420);
             } else {
               card.style.transition = 'transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.25)';
@@ -1004,6 +1004,7 @@
         try {
           await supabaseFetch(`/notes?id=eq.${id}`, {
             method: 'PATCH',
+            headers: { 'Prefer': 'return=representation' },
             body: JSON.stringify({ deleted_at: now })
           });
         } catch (e) {
@@ -1025,6 +1026,7 @@
         try {
           await supabaseFetch(`/notes?id=eq.${id}`, {
             method: 'PATCH',
+            headers: { 'Prefer': 'return=representation' },
             body: JSON.stringify({ deleted_at: null })
           });
         } catch (e) {
@@ -1122,6 +1124,7 @@
         } else {
           await supabaseFetch(`/notes?id=eq.${currentNoteId}`, {
             method: 'PATCH',
+            headers: { 'Prefer': 'return=representation' },
             body: JSON.stringify({ title, content, updated_at: now })
           });
         }
@@ -1131,7 +1134,7 @@
 
     async function deleteCurrentNote() {
       if (!currentNoteId) return closeEditor();
-      moveToTrash(currentNoteId);
+      await moveToTrash(currentNoteId);
       closeEditor();
     }
 
