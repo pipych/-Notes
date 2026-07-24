@@ -935,7 +935,7 @@
             <div class="empty-state-icon">
               <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                <path d="M22 3h-6a4 4 0 0 4 4v14a3 3 0 0 1 3-3h7z"/>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
               </svg>
             </div>
             <div class="empty-state-text">
@@ -1094,6 +1094,7 @@
 
     async function hardDeleteNote(id) {
       notes = notes.filter(n => n.id !== id);
+      localStorage.removeItem('bars_chat_' + id);
 
       if (currentUser.is_guest) {
         sessionStorage.setItem('guest_notes', JSON.stringify(notes));
@@ -1120,7 +1121,9 @@
         const note = notes.find(n => n.id === noteId);
         titleInput.value = note ? (note.title || '') : '';
         contentInput.value = note ? (note.content || '') : '';
-        currentChatHistory = (note && Array.isArray(note.chat_history)) ? [...note.chat_history] : [];
+        
+        const localChat = localStorage.getItem('bars_chat_' + noteId);
+        currentChatHistory = localChat ? JSON.parse(localChat) : [];
       } else {
         titleInput.value = '';
         contentInput.value = '';
@@ -1150,18 +1153,18 @@
       const title = document.getElementById('noteTitle').value.trim();
       const content = document.getElementById('noteContent').value.trim();
 
-      if (!title && !content && currentChatHistory.length === 0) return;
+      if (!title && !content) return;
 
       const now = new Date().toISOString();
 
       if (currentUser.is_guest) {
         if (!currentNoteId) {
           currentNoteId = 'local_' + Date.now();
-          notes.unshift({ id: currentNoteId, user_id: currentUser.id, title, content, chat_history: currentChatHistory, updated_at: now });
+          notes.unshift({ id: currentNoteId, user_id: currentUser.id, title, content, updated_at: now });
         } else {
           const idx = notes.findIndex(n => n.id === currentNoteId);
           if (idx !== -1) {
-            notes[idx] = { ...notes[idx], title, content, chat_history: currentChatHistory, updated_at: now };
+            notes[idx] = { ...notes[idx], title, content, updated_at: now };
           }
         }
         sessionStorage.setItem('guest_notes', JSON.stringify(notes));
@@ -1170,17 +1173,21 @@
           const res = await supabaseFetch('/notes', {
             method: 'POST',
             headers: { 'Prefer': 'return=representation' },
-            body: JSON.stringify({ user_id: currentUser.id, title, content, chat_history: currentChatHistory })
+            body: JSON.stringify({ user_id: currentUser.id, title, content })
           });
           if (res && res[0]) currentNoteId = res[0].id;
         } else {
           await supabaseFetch(`/notes?id=eq.${currentNoteId}`, {
             method: 'PATCH',
             headers: { 'Prefer': 'return=representation' },
-            body: JSON.stringify({ title, content, chat_history: currentChatHistory, updated_at: now })
+            body: JSON.stringify({ title, content, updated_at: now })
           });
         }
         await loadNotes();
+      }
+
+      if (currentNoteId) {
+        localStorage.setItem('bars_chat_' + currentNoteId, JSON.stringify(currentChatHistory));
       }
     }
 
@@ -1265,7 +1272,9 @@
         loadingMsg.innerHTML = formatRhymesText(replyText);
         currentChatHistory.push({ role: 'model', parts: [{ text: replyText }] });
 
-        handleAutoSave();
+        if (currentNoteId) {
+          localStorage.setItem('bars_chat_' + currentNoteId, JSON.stringify(currentChatHistory));
+        }
 
       } catch (err) {
         console.error(err);
