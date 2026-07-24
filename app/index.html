@@ -8,15 +8,15 @@
 
   <style>
     :root {
-      --bg-app: #04060d;
-      --card-bg: rgba(14, 18, 30, 0.75);
-      --card-bg-active: rgba(22, 28, 45, 0.85);
-      --glass-border: 1px solid rgba(255, 255, 255, 0.07);
+      --bg-app: #05070e;
+      --card-bg: rgba(22, 22, 28, 0.75);
+      --card-bg-active: rgba(30, 30, 38, 0.85);
+      --glass-border: 1px solid rgba(255, 255, 255, 0.08);
       --glass-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
       
-      --btn-blue-bg: rgba(25, 45, 85, 0.15);
-      --btn-blue-border: 1px solid rgba(80, 130, 255, 0.12);
-      --btn-blue-glow: 0 4px 20px rgba(10, 40, 120, 0.1);
+      --btn-blue-bg: rgba(255, 255, 255, 0.06);
+      --btn-blue-border: 1px solid rgba(70, 120, 255, 0.12);
+      --btn-blue-glow: 0 4px 16px rgba(0, 0, 0, 0.3);
 
       --text-main: #ededed;
       --text-muted: #8e95a5;
@@ -34,7 +34,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
     }
 
-    /* Aurora Background */
+    /* Vibrant Aurora Background */
     .aurora-bg {
       position: fixed;
       inset: 0;
@@ -47,36 +47,36 @@
     .aurora-blob {
       position: absolute;
       border-radius: 50%;
-      filter: blur(95px);
-      opacity: 0.45;
+      filter: blur(70px);
+      opacity: 0.85;
       will-change: transform;
     }
 
     .aurora-1 {
-      bottom: -25vh;
+      bottom: -22vh;
       left: -15vw;
-      width: 85vw;
-      height: 55vh;
-      background: radial-gradient(circle, rgba(12, 55, 160, 0.45) 0%, rgba(0, 0, 0, 0) 70%);
-      animation: auroraFlow1 18s ease-in-out infinite alternate;
+      width: 90vw;
+      height: 60vh;
+      background: radial-gradient(circle, rgba(10, 90, 255, 0.85) 0%, rgba(0, 0, 0, 0) 70%);
+      animation: auroraFlow1 16s ease-in-out infinite alternate;
     }
 
     .aurora-2 {
-      bottom: -30vh;
+      bottom: -28vh;
       right: -15vw;
-      width: 90vw;
-      height: 60vh;
-      background: radial-gradient(circle, rgba(0, 85, 200, 0.35) 0%, rgba(0, 0, 0, 0) 70%);
-      animation: auroraFlow2 22s ease-in-out infinite alternate;
+      width: 95vw;
+      height: 65vh;
+      background: radial-gradient(circle, rgba(0, 130, 255, 0.75) 0%, rgba(0, 0, 0, 0) 70%);
+      animation: auroraFlow2 20s ease-in-out infinite alternate;
     }
 
     .aurora-3 {
-      bottom: -15vh;
-      left: 15vw;
-      width: 70vw;
-      height: 45vh;
-      background: radial-gradient(circle, rgba(15, 25, 100, 0.4) 0%, rgba(0, 0, 0, 0) 70%);
-      animation: auroraFlow3 15s ease-in-out infinite alternate;
+      bottom: -12vh;
+      left: 10vw;
+      width: 80vw;
+      height: 50vh;
+      background: radial-gradient(circle, rgba(20, 70, 240, 0.8) 0%, rgba(0, 0, 0, 0) 70%);
+      animation: auroraFlow3 14s ease-in-out infinite alternate;
     }
 
     @keyframes auroraFlow1 {
@@ -109,7 +109,7 @@
     @keyframes pulseBtn {
       0% {
         transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(70, 130, 255, 0.3);
+        box-shadow: 0 0 0 0 rgba(70, 130, 255, 0.4);
       }
       70% {
         transform: scale(1.08);
@@ -350,7 +350,7 @@
       bottom: calc(env(safe-area-inset-bottom) + 28px);
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(12, 16, 28, 0.85);
+      background: rgba(18, 18, 24, 0.82);
       border: var(--btn-blue-border);
       box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
       backdrop-filter: blur(20px);
@@ -384,8 +384,8 @@
     }
 
     .nav-tab.active {
-      background: rgba(70, 130, 255, 0.12);
-      border: 1px solid rgba(100, 150, 255, 0.18);
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       color: var(--text-main);
     }
 
@@ -439,13 +439,13 @@
     }
 
     .btn-ai-rhyme:active {
-      background: rgba(30, 50, 95, 0.3);
+      background: rgba(255, 255, 255, 0.12);
       transform: scale(0.95);
     }
 
     .btn-ai-rhyme.active {
-      background: rgba(60, 110, 220, 0.2);
-      border-color: rgba(100, 150, 255, 0.3);
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.25);
     }
 
     .save-status-indicator {
@@ -475,7 +475,7 @@
     }
 
     .btn-icon:active {
-      background: rgba(30, 50, 95, 0.3);
+      background: rgba(255, 255, 255, 0.12);
       transform: scale(0.92);
     }
 
@@ -565,16 +565,16 @@
 
     .ai-message.user {
       align-self: flex-end;
-      background: rgba(60, 110, 220, 0.18);
-      border: 1px solid rgba(100, 150, 255, 0.15);
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       color: #fff;
       border-bottom-right-radius: 4px;
     }
 
     .ai-message.bot {
       align-self: flex-start;
-      background: rgba(18, 22, 35, 0.85);
-      border: var(--btn-blue-border);
+      background: rgba(22, 22, 28, 0.85);
+      border: var(--glass-border);
       color: var(--text-main);
       border-bottom-left-radius: 4px;
     }
@@ -599,7 +599,7 @@
       display: flex;
       align-items: center;
       padding: 8px 10px;
-      background: rgba(6, 9, 18, 0.4);
+      background: rgba(0, 0, 0, 0.3);
       border-top: var(--btn-blue-border);
       gap: 8px;
     }
