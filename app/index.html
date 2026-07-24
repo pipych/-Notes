@@ -39,6 +39,21 @@
       to { transform: rotate(360deg); }
     }
 
+    @keyframes pulseBtn {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.5);
+      }
+      70% {
+        transform: scale(1.08);
+        box-shadow: 0 0 0 16px rgba(255, 255, 255, 0);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+      }
+    }
+
     .animate-spin {
       animation: spin 0.8s linear infinite;
     }
@@ -218,6 +233,10 @@
       will-change: transform;
     }
 
+    .btn-float-icon.pulse {
+      animation: pulseBtn 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    }
+
     .btn-float-icon:active {
       transform: scale(0.92);
     }
@@ -302,10 +321,41 @@
     }
 
     .empty-state {
-      text-align: center;
-      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
       margin-top: 80px;
+      color: var(--text-muted);
+      text-align: center;
+      gap: 12px;
+    }
+
+    .empty-state-icon {
+      color: var(--text-muted);
+      opacity: 0.35;
+      margin-bottom: 4px;
+    }
+
+    .empty-state-text {
       font-size: 15px;
+      font-weight: 500;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .inline-plus-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 50%;
+      vertical-align: middle;
+      margin: 0 3px;
+      color: var(--text-main);
     }
 
     .profile-container {
@@ -542,10 +592,21 @@
       return 'Ранее';
     }
 
+    function updatePulseState() {
+      const btn = document.getElementById('btnNewTrack');
+      if (notes.length === 0) {
+        btn.classList.add('pulse');
+      } else {
+        btn.classList.remove('pulse');
+      }
+    }
+
     function renderNotes() {
       const query = document.getElementById('searchInput').value.toLowerCase();
       const container = document.getElementById('notesList');
       container.innerHTML = '';
+
+      updatePulseState();
 
       const filtered = notes.filter(n => 
         (n.title && n.title.toLowerCase().includes(query)) || 
@@ -553,7 +614,20 @@
       );
 
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="empty-state">Треков нет.<br>Нажми «+», чтобы написать новый.</div>`;
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              </svg>
+            </div>
+            <div class="empty-state-text">
+              Треков пока нет<br>
+              Нажми на <span class="inline-plus-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span> чтобы написать трек
+            </div>
+          </div>
+        `;
         return;
       }
 
@@ -696,7 +770,7 @@
       }
 
       if (notes.length === 0) {
-        document.getElementById('notesList').innerHTML = `<div class="empty-state">Треков нет.<br>Нажми «+», чтобы написать новый.</div>`;
+        renderNotes();
       }
     }
 
