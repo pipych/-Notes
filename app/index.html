@@ -8,16 +8,21 @@
 
   <style>
     :root {
-      --bg-app: #08080a;
-      --card-bg: #16161c;
-      --card-bg-active: #22222a;
-      --glass-border: 1px solid rgba(255, 255, 255, 0.08);
-      --glass-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      --bg-app: #04060d;
+      --card-bg: rgba(18, 22, 36, 0.72);
+      --card-bg-active: rgba(28, 36, 58, 0.85);
+      --glass-border: 1px solid rgba(60, 120, 255, 0.18);
+      --glass-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
       
+      --btn-blue-bg: rgba(20, 42, 85, 0.38);
+      --btn-blue-border: 1px solid rgba(70, 135, 255, 0.25);
+      --btn-blue-glow: 0 4px 18px rgba(15, 70, 220, 0.18);
+
       --text-main: #ededed;
-      --text-muted: #8e8e93;
+      --text-muted: #8e95a5;
       --danger: #ff453a;
       --success: #34c759;
+      --accent-blue: #2f7cf6;
       --radius-card: 20px;
       --radius-pill: 9999px;
     }
@@ -28,6 +33,69 @@
       padding: 0;
       -webkit-tap-highlight-color: transparent;
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+    }
+
+    /* Aurora Background */
+    .aurora-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      overflow: hidden;
+      background: var(--bg-app);
+    }
+
+    .aurora-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(85px);
+      opacity: 0.55;
+      will-change: transform;
+    }
+
+    .aurora-1 {
+      bottom: -20vh;
+      left: -15vw;
+      width: 85vw;
+      height: 55vh;
+      background: radial-gradient(circle, rgba(14, 75, 220, 0.6) 0%, rgba(0, 0, 0, 0) 70%);
+      animation: auroraFlow1 16s ease-in-out infinite alternate;
+    }
+
+    .aurora-2 {
+      bottom: -25vh;
+      right: -15vw;
+      width: 90vw;
+      height: 60vh;
+      background: radial-gradient(circle, rgba(0, 115, 255, 0.45) 0%, rgba(0, 0, 0, 0) 70%);
+      animation: auroraFlow2 20s ease-in-out infinite alternate;
+    }
+
+    .aurora-3 {
+      bottom: -10vh;
+      left: 15vw;
+      width: 70vw;
+      height: 45vh;
+      background: radial-gradient(circle, rgba(20, 35, 140, 0.5) 0%, rgba(0, 0, 0, 0) 70%);
+      animation: auroraFlow3 14s ease-in-out infinite alternate;
+    }
+
+    @keyframes auroraFlow1 {
+      0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+      50% { transform: translate(12vw, -8vh) scale(1.2) rotate(15deg); }
+      100% { transform: translate(-6vw, -4vh) scale(0.9) rotate(-10deg); }
+    }
+
+    @keyframes auroraFlow2 {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-14vw, -10vh) scale(1.18); }
+      100% { transform: translate(8vw, -3vh) scale(0.95); }
+    }
+
+    @keyframes auroraFlow3 {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(10vw, -6vh) scale(1.25); }
+      100% { transform: translate(-10vw, -12vh) scale(1); }
     }
 
     @keyframes fadeIn {
@@ -42,15 +110,15 @@
     @keyframes pulseBtn {
       0% {
         transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.5);
+        box-shadow: 0 0 0 0 rgba(47, 124, 246, 0.6);
       }
       70% {
         transform: scale(1.08);
-        box-shadow: 0 0 0 16px rgba(255, 255, 255, 0);
+        box-shadow: 0 0 0 18px rgba(47, 124, 246, 0);
       }
       100% {
         transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+        box-shadow: 0 0 0 0 rgba(47, 124, 246, 0);
       }
     }
 
@@ -109,9 +177,10 @@
     }
 
     .search-box {
-      background: rgba(255, 255, 255, 0.07);
-      border: var(--glass-border);
-      box-shadow: var(--glass-shadow);
+      background: var(--btn-blue-bg);
+      border: var(--btn-blue-border);
+      box-shadow: var(--btn-blue-glow);
+      backdrop-filter: blur(12px);
       border-radius: var(--radius-pill);
       padding: 12px 18px;
       margin-bottom: 20px;
@@ -199,6 +268,7 @@
       background: var(--card-bg);
       border: var(--glass-border);
       box-shadow: var(--glass-shadow);
+      backdrop-filter: blur(16px);
       border-radius: inherit;
       padding: 14px 16px;
       cursor: pointer;
@@ -257,8 +327,8 @@
       border-radius: 50%;
       background: #ffffff;
       color: #000000;
-      border: var(--glass-border);
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+      border: var(--btn-blue-border);
+      box-shadow: 0 10px 28px rgba(10, 70, 220, 0.4);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -281,9 +351,10 @@
       bottom: calc(env(safe-area-inset-bottom) + 28px);
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(22, 22, 28, 0.88);
-      border: var(--glass-border);
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+      background: rgba(14, 20, 36, 0.82);
+      border: var(--btn-blue-border);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65), var(--btn-blue-glow);
+      backdrop-filter: blur(20px);
       border-radius: var(--radius-pill);
       padding: 6px 10px;
       display: flex;
@@ -314,7 +385,8 @@
     }
 
     .nav-tab.active {
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(47, 124, 246, 0.25);
+      border: 1px solid rgba(70, 140, 255, 0.3);
       color: var(--text-main);
     }
 
@@ -351,8 +423,10 @@
     }
 
     .btn-ai-rhyme {
-      background: rgba(255, 255, 255, 0.08);
-      border: var(--glass-border);
+      background: var(--btn-blue-bg);
+      border: var(--btn-blue-border);
+      box-shadow: var(--btn-blue-glow);
+      backdrop-filter: blur(12px);
       color: #fff;
       padding: 8px 14px;
       border-radius: var(--radius-pill);
@@ -366,13 +440,13 @@
     }
 
     .btn-ai-rhyme:active {
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(35, 70, 140, 0.5);
       transform: scale(0.95);
     }
 
     .btn-ai-rhyme.active {
-      background: rgba(255, 255, 255, 0.22);
-      border-color: rgba(255, 255, 255, 0.4);
+      background: rgba(47, 124, 246, 0.35);
+      border-color: rgba(90, 165, 255, 0.5);
     }
 
     .save-status-indicator {
@@ -387,8 +461,10 @@
       width: 42px;
       height: 42px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.07);
-      border: var(--glass-border);
+      background: var(--btn-blue-bg);
+      border: var(--btn-blue-border);
+      box-shadow: var(--btn-blue-glow);
+      backdrop-filter: blur(12px);
       color: var(--text-main);
       display: flex;
       align-items: center;
@@ -400,7 +476,7 @@
     }
 
     .btn-icon:active {
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(35, 70, 140, 0.5);
       transform: scale(0.92);
     }
 
@@ -455,6 +531,7 @@
       background: var(--card-bg);
       border: var(--glass-border);
       border-radius: var(--radius-card);
+      backdrop-filter: blur(16px);
       overflow: hidden;
       animation: fadeIn 0.25s ease-out;
       box-shadow: var(--glass-shadow);
@@ -489,15 +566,16 @@
 
     .ai-message.user {
       align-self: flex-end;
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(47, 124, 246, 0.25);
+      border: 1px solid rgba(80, 150, 255, 0.25);
       color: #fff;
       border-bottom-right-radius: 4px;
     }
 
     .ai-message.bot {
       align-self: flex-start;
-      background: #22222a;
-      border: var(--glass-border);
+      background: rgba(20, 26, 42, 0.85);
+      border: var(--btn-blue-border);
       color: var(--text-main);
       border-bottom-left-radius: 4px;
     }
@@ -522,15 +600,15 @@
       display: flex;
       align-items: center;
       padding: 8px 10px;
-      background: rgba(0, 0, 0, 0.2);
-      border-top: var(--glass-border);
+      background: rgba(8, 12, 24, 0.4);
+      border-top: var(--btn-blue-border);
       gap: 8px;
     }
 
     .ai-chat-input {
       flex: 1;
-      background: rgba(255, 255, 255, 0.07);
-      border: var(--glass-border);
+      background: var(--btn-blue-bg);
+      border: var(--btn-blue-border);
       border-radius: var(--radius-pill);
       padding: 8px 14px;
       color: #fff;
@@ -607,8 +685,9 @@
       width: 88px;
       height: 88px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.07);
-      border: var(--glass-border);
+      background: var(--btn-blue-bg);
+      border: var(--btn-blue-border);
+      box-shadow: var(--btn-blue-glow);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -629,6 +708,12 @@
   </style>
 </head>
 <body>
+
+  <div class="aurora-bg">
+    <div class="aurora-blob aurora-1"></div>
+    <div class="aurora-blob aurora-2"></div>
+    <div class="aurora-blob aurora-3"></div>
+  </div>
 
   <div class="header">
     <div class="app-title">Bars</div>
@@ -660,6 +745,12 @@
   </button>
 
   <div id="editorScreen" class="editor-screen">
+    <div class="aurora-bg">
+      <div class="aurora-blob aurora-1"></div>
+      <div class="aurora-blob aurora-2"></div>
+      <div class="aurora-blob aurora-3"></div>
+    </div>
+
     <div class="editor-topbar">
       <button class="btn-icon" id="btnBack">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
@@ -698,6 +789,12 @@
   </div>
 
   <div id="profileScreen" class="profile-screen">
+    <div class="aurora-bg">
+      <div class="aurora-blob aurora-1"></div>
+      <div class="aurora-blob aurora-2"></div>
+      <div class="aurora-blob aurora-3"></div>
+    </div>
+
     <div class="editor-topbar">
       <button class="btn-icon" id="btnProfileBack">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
