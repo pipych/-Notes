@@ -716,7 +716,6 @@
         }
       }
 
-      // Проверка на авто-удаление из корзины старше 7 дней
       await cleanupExpiredTrash();
       renderNotes();
     }
@@ -783,10 +782,8 @@
       const container = document.getElementById('notesList');
       container.innerHTML = '';
 
-      // Активные заметки (где deleted_at отсутствует или null)
       const activeNotes = notes.filter(n => !n.deleted_at);
 
-      // Разделение: Трек = есть заголовок, Набросок = нет заголовка
       const tabFiltered = activeNotes.filter(n => {
         const hasTitle = n.title && n.title.trim() !== '';
         return activeTab === 'tracks' ? hasTitle : !hasTitle;
@@ -986,7 +983,6 @@
         `;
 
         card.addEventListener('click', () => {
-          // Восстановление при нажатии
           restoreFromTrash(note.id);
         });
 
