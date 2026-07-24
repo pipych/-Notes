@@ -54,6 +54,29 @@
       }
     }
 
+    @keyframes dotBounce {
+      0%, 80%, 100% { transform: scale(0.3); opacity: 0.3; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    .dots-bounce {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 2px;
+    }
+
+    .dots-bounce span {
+      width: 7px;
+      height: 7px;
+      background: var(--text-main);
+      border-radius: 50%;
+      animation: dotBounce 1.4s infinite ease-in-out both;
+    }
+
+    .dots-bounce span:nth-child(1) { animation-delay: -0.32s; }
+    .dots-bounce span:nth-child(2) { animation-delay: -0.16s; }
+
     .animate-spin {
       animation: spin 0.8s linear infinite;
     }
@@ -425,7 +448,6 @@
       font-family: inherit;
     }
 
-    /* AI Rhymes Split Screen Chat Section */
     .editor-ai-section {
       display: none;
       flex-direction: column;
@@ -649,9 +671,7 @@
       </div>
 
       <div class="editor-ai-section">
-        <div class="ai-chat-messages" id="aiChatMessages">
-          <div class="ai-message bot">Привет! Напиши слово, и я подберу 10 лучших рифм для твоего трека. Если нужны рифмы, близкие по смыслу, просто уточни в запросе!</div>
-        </div>
+        <div class="ai-chat-messages" id="aiChatMessages"></div>
         <div class="ai-chat-input-container">
           <input type="text" id="aiChatInput" class="ai-chat-input" placeholder="Напиши слово..." onkeypress="if(event.key==='Enter') sendAiRhymeQuery()">
           <button class="btn-ai-send" onclick="sendAiRhymeQuery()">
@@ -688,7 +708,9 @@
     let currentNoteId = null;
     let autoSaveTimer = null;
     let activeTab = 'tracks';
-    let chatHistory = [];
+    let currentChatHistory = [];
+
+    const DEFAULT_WELCOME_MSG = "Привет! Напиши слово, и я подберу 10 лучших рифм для твоего трека. Если нужны рифмы, близкие по смыслу, просто уточни в запросе!";
 
     function setSaveState(state) {
       const container = document.getElementById('saveStatus');
@@ -1075,15 +1097,21 @@
       const titleInput = document.getElementById('noteTitle');
       const contentInput = document.getElementById('noteContent');
 
+      document.getElementById('editorContainer').classList.remove('split-mode');
+      document.getElementById('btnToggleRhymes').classList.remove('active');
+
       if (noteId && notes) {
         const note = notes.find(n => n.id === noteId);
         titleInput.value = note ? (note.title || '') : '';
         contentInput.value = note ? (note.content || '') : '';
+        currentChatHistory = (note && Array.isArray(note.chat_history)) ? [...note.chat_history] : [];
       } else {
         titleInput.value = '';
         contentInput.value = '';
+        currentChatHistory = [];
       }
 
+      renderChatUI();
       setSaveState('saved');
       editor.style.display = 'flex';
     }
@@ -1106,18 +1134,18 @@
       const title = document.getElementById('noteTitle').value.trim();
       const content = document.getElementById('noteContent').value.trim();
 
-      if (!title && !content) return;
+      if (!title && !content && currentChatHistory.length === 0) return;
 
       const now = new Date().toISOString();
 
       if (currentUser.is_guest) {
         if (!currentNoteId) {
           currentNoteId = 'local_' + Date.now();
-          notes.unshift({ id: currentNoteId, user_id: currentUser.id, title, content, updated_at: now });
+          notes.unshift({ id: currentNoteId, user_id: currentUser.id, title, content, chat_history: currentChatHistory, updated_at: now });
         } else {
           const idx = notes.findIndex(n => n.id === currentNoteId);
           if (idx !== -1) {
-            notes[idx] = { ...notes[idx], title, content, updated_at: now };
+            notes[idx] = { ...notes[idx], title, content, chat_history: currentChatHistory, updated_at: now };
           }
         }
         sessionStorage.setItem('guest_notes', JSON.stringify(notes));
@@ -1126,14 +1154,14 @@
           const res = await supabaseFetch('/notes', {
             method: 'POST',
             headers: { 'Prefer': 'return=representation' },
-            body: JSON.stringify({ user_id: currentUser.id, title, content })
+            body: JSON.stringify({ user_id: currentUser.id, title, content, chat_history: currentChatHistory })
           });
           if (res && res[0]) currentNoteId = res[0].id;
         } else {
           await supabaseFetch(`/notes?id=eq.${currentNoteId}`, {
             method: 'PATCH',
             headers: { 'Prefer': 'return=representation' },
-            body: JSON.stringify({ title, content, updated_at: now })
+            body: JSON.stringify({ title, content, chat_history: currentChatHistory, updated_at: now })
           });
         }
         await loadNotes();
@@ -1146,12 +1174,27 @@
       closeEditor();
     }
 
-    /* Gemini AI Rhyme Logic */
-    function appendChatMessage(role, text) {
+    /* AI Chat UI & Logic */
+    function renderChatUI() {
+      const chatContainer = document.getElementById('aiChatMessages');
+      chatContainer.innerHTML = '';
+
+      if (currentChatHistory.length === 0) {
+        appendChatMessageUI('bot', DEFAULT_WELCOME_MSG);
+      } else {
+        currentChatHistory.forEach(msg => {
+          const role = msg.role === 'user' ? 'user' : 'bot';
+          const text = msg.parts?.[0]?.text || '';
+          if (text) appendChatMessageUI(role, text);
+        });
+      }
+    }
+
+    function appendChatMessageUI(role, contentHTML) {
       const chatContainer = document.getElementById('aiChatMessages');
       const msgDiv = document.createElement('div');
       msgDiv.className = `ai-message ${role}`;
-      msgDiv.innerText = text;
+      msgDiv.innerHTML = contentHTML;
       chatContainer.appendChild(msgDiv);
       chatContainer.scrollTop = chatContainer.scrollHeight;
       return msgDiv;
@@ -1163,20 +1206,20 @@
       if (!query) return;
 
       input.value = '';
-      appendChatMessage('user', query);
+      appendChatMessageUI('user', query);
 
-      chatHistory.push({ role: 'user', parts: [{ text: query }] });
+      currentChatHistory.push({ role: 'user', parts: [{ text: query }] });
 
-      const loadingMsg = appendChatMessage('bot', 'Подбираю рифмы...');
+      const loadingMsg = appendChatMessageUI('bot', `<div class="dots-bounce"><span></span><span></span><span></span></div>`);
 
       try {
-        const systemInstruction = "Ты — гениальный поэт, хитмейкер и мастер рифм. Твоя задача — подбирать сочные, идеальные и современные рифмы для рэп/хип-хоп/поп треков. Если пользователь пишет просто слово или просит рифму, выдай список из ровно 10 отличных рифм в виде нумерованного списка. Если пользователь просит подбирать рифмы, похожие по смыслу, подбирай рифмы с уклоном в семантику и контекст. Пиши четко, стильно и без лишней «воды».";
+        const systemInstruction = "Ты — гениальный поэт и рифмоплет. Твоя задача — подбирать сочные, идеальные и современные рифмы. КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО использовать форматирование Markdown (никакого жирного шрифта **, никаких звездочек, курсива, заголовков). Запрещено писать любые приветствия, комментарии, вводные или заключительные слова. Выдавай ИСКЛЮЧИТЕЛЬНО нумерованный чистый список рифм (или чистый список ответов по смыслу без разметки и без лишних слов).";
 
         const response = await fetch('/api/rhymes', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: chatHistory,
+            contents: currentChatHistory,
             systemInstruction: systemInstruction
           })
         });
@@ -1186,10 +1229,14 @@
         }
 
         const data = await response.json();
-        const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Не удалось подобрать рифмы, попробуй еще раз.";
+        let replyText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Не удалось подобрать рифмы, попробуй еще раз.";
+
+        replyText = replyText.replace(/\*\*/g, '').replace(/\*/g, '');
 
         loadingMsg.innerText = replyText;
-        chatHistory.push({ role: 'model', parts: [{ text: replyText }] });
+        currentChatHistory.push({ role: 'model', parts: [{ text: replyText }] });
+
+        handleAutoSave();
 
       } catch (err) {
         console.error(err);
