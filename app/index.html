@@ -61,7 +61,7 @@
     body {
       background-color: var(--bg-app);
       color: var(--text-main);
-      padding: 16px 16px calc(env(safe-area-inset-bottom) + 90px) 16px;
+      padding: 16px 16px calc(env(safe-area-inset-bottom) + 105px) 16px;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -187,11 +187,15 @@
     }
 
     .note-card-title {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 600;
       margin-bottom: 2px;
       padding-right: 60px;
       word-break: break-word;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     .note-card-preview {
@@ -215,7 +219,7 @@
 
     .btn-float-icon {
       position: fixed;
-      bottom: calc(env(safe-area-inset-bottom) + 84px);
+      bottom: calc(env(safe-area-inset-bottom) + 96px);
       right: 20px;
       width: 56px;
       height: 56px;
@@ -241,35 +245,42 @@
       transform: scale(0.92);
     }
 
-    /* Плавник-навигация (Bottom Pill Navbar) */
+    /* Увеличенный нижний навбар с вертикальным расположением */
     .bottom-nav-container {
       position: fixed;
-      bottom: calc(env(safe-area-inset-bottom) + 20px);
+      bottom: calc(env(safe-area-inset-bottom) + 16px);
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(22, 22, 28, 0.85);
+      background: rgba(22, 22, 28, 0.88);
       border: var(--glass-border);
       box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
       border-radius: var(--radius-pill);
-      padding: 5px;
+      padding: 6px 10px;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
       z-index: 45;
     }
 
     .nav-tab {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 8px;
-      padding: 10px 20px;
-      border-radius: var(--radius-pill);
+      justify-content: center;
+      gap: 3px;
+      padding: 8px 26px;
+      border-radius: 22px;
       color: var(--text-muted);
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: 500;
       cursor: pointer;
       transition: background 0.2s ease, color 0.2s ease;
       user-select: none;
+    }
+
+    .nav-tab svg {
+      width: 20px;
+      height: 20px;
     }
 
     .nav-tab.active {
@@ -278,7 +289,7 @@
     }
 
     .nav-tab:active {
-      transform: scale(0.96);
+      transform: scale(0.95);
     }
 
     .editor-screen, .profile-screen {
@@ -446,14 +457,14 @@
 
   <div id="notesList" class="notes-list"></div>
 
-  <!-- Плавающий навигационный пил -->
+  <!-- Плавающий навигационный пил с вертикальным расположением иконка + подпись -->
   <div class="bottom-nav-container">
     <div class="nav-tab active" id="tabTracks">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
       <span>Треки</span>
     </div>
     <div class="nav-tab" id="tabDrafts">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
       <span>Наброски</span>
     </div>
   </div>
@@ -743,6 +754,10 @@
             day: 'numeric', month: 'short'
           });
 
+          const hasExplicitTitle = note.title && note.title.trim() !== '';
+          const titleText = hasExplicitTitle ? note.title : (note.content || 'Пустой текст...');
+          const previewText = hasExplicitTitle ? (note.content || '') : '';
+
           const wrapper = document.createElement('div');
           wrapper.className = 'note-wrapper';
 
@@ -754,8 +769,8 @@
           card.className = 'note-card';
           card.innerHTML = `
             <div class="note-card-date">${dateStr}</div>
-            <div class="note-card-title">${note.title || 'Без названия'}</div>
-            <div class="note-card-preview">${note.content || 'Пустой текст...'}</div>
+            <div class="note-card-title">${titleText}</div>
+            ${previewText ? `<div class="note-card-preview">${previewText}</div>` : ''}
           `;
 
           let startX = 0;
