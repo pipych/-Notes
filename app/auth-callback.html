@@ -1,29 +1,94 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bars Auth</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #05070e;
+      color: #ededed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .container {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
+    .logo {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .subtitle {
+      color: #8e95a5;
+      font-size: 15px;
+    }
+    .btn-open {
+      display: inline-block;
+      padding: 14px 32px;
+      background: #ffffff;
+      color: #000000;
+      border-radius: 9999px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+      margin-top: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    .error {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+  </style>
 </head>
-<body style="background:#05070e;color:#ededed;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:sans-serif;">
-  <div style="text-align:center;">
-    <div style="font-size:24px;font-weight:700;margin-bottom:8px;">Bars</div>
-    <div style="color:#8e95a5;">Завершаем вход...</div>
+<body>
+  <div class="container" id="container">
+    <div class="logo">Bars</div>
+    <div class="subtitle">Завершаем вход...</div>
+    <a id="openAppBtn" class="btn-open" href="#" style="display:none">Открыть Bars</a>
   </div>
   <script>
-    // Extract tokens from URL hash (Supabase puts them there)
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
-    const access_token = params.get('access_token');
-    const refresh_token = params.get('refresh_token');
+    (function() {
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      const access_token = params.get('access_token');
+      const refresh_token = params.get('refresh_token');
 
-    if (access_token && refresh_token) {
-      // Redirect to the app via deep link with query params (more reliable than hash)
-      window.location.href = 'barsnote://auth/callback?access_token=' + encodeURIComponent(access_token) + '&refresh_token=' + encodeURIComponent(refresh_token);
-    } else {
-      // No tokens — redirect to main page
-      document.querySelector('div').innerHTML = '<div style="font-size:24px;font-weight:700;margin-bottom:8px;">Ошибка</div><div style="color:#8e95a5;">Не удалось завершить вход</div>';
-    }
+      if (!access_token || !refresh_token) {
+        document.getElementById('container').innerHTML =
+          '<div class="error">Ошибка</div><div class="subtitle">Не удалось завершить вход</div>';
+        return;
+      }
+
+      const deepLinkUrl = 'barsnote://auth/callback?access_token=' +
+        encodeURIComponent(access_token) +
+        '&refresh_token=' +
+        encodeURIComponent(refresh_token);
+
+      const btn = document.getElementById('openAppBtn');
+      btn.href = deepLinkUrl;
+      btn.style.display = 'inline-block';
+
+      // Auto-click the link (simulates user click, works in Chrome Custom Tabs)
+      setTimeout(function() {
+        btn.click();
+      }, 200);
+
+      // Fallback: if deep link didn't fire within 3s, show button for manual tap
+      setTimeout(function() {
+        btn.style.display = 'inline-block';
+        document.querySelector('.subtitle').innerText = 'Нажми на кнопку чтобы вернуться в приложение';
+      }, 3000);
+    })();
   </script>
 </body>
 </html>
