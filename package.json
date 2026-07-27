@@ -1,0 +1,17 @@
+{
+  "name": "bars",
+  "version": "1.0.0",
+  "description": "Bars — заметки и треки",
+  "main": "app/index.html",
+  "scripts": {
+    "build": "echo 'No build step needed'",
+    "cap:add": "cap add android",
+    "cap:sync": "cap sync",
+    "cap:open": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/core": "^7.2.1",
+    "@capacitor/android": "^7.2.1",
+    "@capacitor/cli": "^7.2.1"
+  }
+}
