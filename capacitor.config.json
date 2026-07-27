@@ -5,6 +5,7 @@
   "server": {
     "url": "https://barsnote.vercel.app",
     "cleartext": true,
+    "allowNavigation": ["accounts.google.com", "bnregnrapuvjtwufvmzn.supabase.co"],
     "androidScheme": "https"
   },
   "android": {

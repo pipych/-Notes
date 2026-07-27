@@ -1014,62 +1014,28 @@
 
     const APP_URL = 'https://barsnote.vercel.app';
 
-    // Detect Capacitor native environment
-    function isCapacitorNative() {
-      return typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform && Capacitor.isNativePlatform();
-    }
-
     async function signInWithGoogle() {
       const btn = document.getElementById('btnGoogleSignIn');
       btn.disabled = true;
       btn.style.opacity = '0.6';
+      btn.innerText = 'Перенаправление...';
 
-      if (isCapacitorNative()) {
-        // Capacitor native: use Chrome Custom Tabs + deep link
-        btn.innerText = 'Открываю Google...';
-        const { Browser } = Capacitor.Plugins;
-
-        const { data, error } = await sbClient.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: 'https://barsnote.vercel.app/auth-callback.html',
-            skipBrowserRedirect: true,
-            queryParams: {
-              access_type: 'offline',
-              prompt: 'consent'
-            }
+      const { error } = await sbClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: APP_URL,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
           }
-        });
-
-        if (error || !data?.url) {
-          console.error('OAuth error:', error);
-          btn.disabled = false;
-          btn.style.opacity = '1';
-          btn.innerText = 'Ошибка, попробуй снова';
-          return;
         }
+      });
 
-        await Browser.open({ url: data.url });
-      } else {
-        // Website: regular redirect
-        btn.innerText = 'Перенаправление...';
-        const { error } = await sbClient.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: APP_URL,
-            queryParams: {
-              access_type: 'offline',
-              prompt: 'consent'
-            }
-          }
-        });
-
-        if (error) {
-          console.error('Google sign-in error:', error);
-          btn.disabled = false;
-          btn.style.opacity = '1';
-          btn.innerText = 'Ошибка, попробуй снова';
-        }
+      if (error) {
+        console.error('Google sign-in error:', error);
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.innerText = 'Ошибка, попробуй снова';
       }
     }
 
@@ -1077,60 +1043,29 @@
       const btn = document.getElementById('btnLinkGoogle');
       btn.disabled = true;
       btn.style.opacity = '0.6';
+      btn.innerText = 'Перенаправление...';
 
-      // Store current profile ID so we can link on return
       if (currentUser && currentUser.id) {
         sessionStorage.setItem('bars_linking_profile_id', currentUser.id);
       }
 
-      if (isCapacitorNative()) {
-        // Capacitor native: use Chrome Custom Tabs + deep link
-        btn.innerText = 'Открываю Google...';
-        const { Browser } = Capacitor.Plugins;
-
-        const { data, error } = await sbClient.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: 'https://barsnote.vercel.app/auth-callback.html',
-            skipBrowserRedirect: true,
-            queryParams: {
-              access_type: 'offline',
-              prompt: 'consent'
-            }
+      const { error } = await sbClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: APP_URL,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
           }
-        });
-
-        if (error || !data?.url) {
-          console.error('Link Google error:', error);
-          btn.disabled = false;
-          btn.style.opacity = '1';
-          btn.innerText = 'Привязать Google';
-          sessionStorage.removeItem('bars_linking_profile_id');
-          return;
         }
+      });
 
-        await Browser.open({ url: data.url });
-      } else {
-        // Website: regular redirect
-        btn.innerText = 'Перенаправление...';
-        const { error } = await sbClient.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: APP_URL,
-            queryParams: {
-              access_type: 'offline',
-              prompt: 'consent'
-            }
-          }
-        });
-
-        if (error) {
-          console.error('Link Google error:', error);
-          btn.disabled = false;
-          btn.style.opacity = '1';
-          btn.innerText = 'Привязать Google';
-          sessionStorage.removeItem('bars_linking_profile_id');
-        }
+      if (error) {
+        console.error('Link Google error:', error);
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.innerText = 'Привязать Google';
+        sessionStorage.removeItem('bars_linking_profile_id');
       }
     }
 
@@ -1352,32 +1287,6 @@
           showAuthScreen();
         }
       }
-    }
-
-    // ── Capacitor deep link handler (for Google OAuth callback) ──
-    if (isCapacitorNative()) {
-      const { App } = Capacitor.Plugins;
-      App.addListener('appUrlOpen', async (data) => {
-        const url = data.url;
-        if (url && url.startsWith('barsnote://auth/callback')) {
-          // Parse query params (auth-callback.html passes tokens as query params, not hash)
-          const queryString = url.includes('?') ? url.split('?')[1] : '';
-          if (queryString) {
-            const params = new URLSearchParams(queryString);
-            const access_token = params.get('access_token');
-            const refresh_token = params.get('refresh_token');
-            if (access_token && refresh_token) {
-              try {
-                await sbClient.auth.setSession({ access_token, refresh_token });
-                console.log('Deep link auth: session restored');
-                await init();
-              } catch (e) {
-                console.error('Deep link auth failed:', e);
-              }
-            }
-          }
-        }
-      });
     }
 
     // Listen for auth state changes (e.g., after OAuth redirect)
