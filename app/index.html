@@ -1197,6 +1197,18 @@
     }
 
     async function init() {
+      // If we just came back from OAuth (tokens in URL hash),
+      // wait for Supabase to process them via onAuthStateChange.
+      // Don't create a guest user yet — that causes the redirect loop.
+      if (!window._barsOAuthDeferred) {
+        const hash = window.location.hash;
+        if (hash && (hash.includes('access_token') || hash.includes('type=recovery'))) {
+          window._barsOAuthDeferred = true;
+          console.log('OAuth callback detected, waiting for session...');
+          return;
+        }
+      }
+
       try {
         const tg = window.Telegram?.WebApp;
         if (tg) {
