@@ -1018,7 +1018,9 @@
       btn.style.opacity = '0.6';
       btn.innerText = 'Перенаправление...';
 
-      const redirectTo = window.location.origin + window.location.pathname;
+      // Always redirect to the deployed site (not localhost from Capacitor WebView)
+      const APP_URL = 'https://barsnote.vercel.app';
+      const redirectTo = APP_URL;
 
       const { error } = await sbClient.auth.signInWithOAuth({
         provider: 'google',
@@ -1050,7 +1052,9 @@
         sessionStorage.setItem('bars_linking_profile_id', currentUser.id);
       }
 
-      const redirectTo = window.location.origin + window.location.pathname;
+      // Always redirect to the deployed site (not localhost from Capacitor WebView)
+      const APP_URL = 'https://barsnote.vercel.app';
+      const redirectTo = APP_URL;
 
       const { error } = await sbClient.auth.signInWithOAuth({
         provider: 'google',
@@ -1262,7 +1266,7 @@
             } catch (e) {
               console.error('Failed to link Google to profile:', e);
             }
-          } else if (!currentUser) {
+          } else if (!currentUser || currentUser.is_guest) {
             // No Telegram user, use Google session as primary auth
             currentUser = await getOrCreateProfileFromSession(session);
           }

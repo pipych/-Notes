@@ -10,8 +10,10 @@
     "cap:open": "cap open android"
   },
   "dependencies": {
-    "@capacitor/core": "^7.2.1",
     "@capacitor/android": "^7.2.1",
-    "@capacitor/cli": "^7.2.1"
+    "@capacitor/app": "^7.1.2",
+    "@capacitor/browser": "^7.0.5",
+    "@capacitor/cli": "^7.2.1",
+    "@capacitor/core": "^7.2.1"
   }
 }

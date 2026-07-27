@@ -3,6 +3,8 @@
   "appName": "Bars",
   "webDir": "app",
   "server": {
+    "url": "https://barsnote.vercel.app",
+    "cleartext": true,
     "androidScheme": "https"
   },
   "android": {
