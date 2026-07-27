@@ -1197,15 +1197,23 @@
     }
 
     async function init() {
-      // If we just came back from OAuth (tokens in URL hash),
-      // wait for Supabase to process them via onAuthStateChange.
-      // Don't create a guest user yet — that causes the redirect loop.
-      if (!window._barsOAuthDeferred) {
-        const hash = window.location.hash;
-        if (hash && (hash.includes('access_token') || hash.includes('type=recovery'))) {
-          window._barsOAuthDeferred = true;
-          console.log('OAuth callback detected, waiting for session...');
-          return;
+      // Direct OAuth token handling from URL hash — don't rely on onAuthStateChange timing
+      const hash = window.location.hash.substring(1);
+      if (hash && hash.includes('access_token')) {
+        const hashParams = new URLSearchParams(hash);
+        const at = hashParams.get('access_token');
+        const rt = hashParams.get('refresh_token');
+        if (at && rt) {
+          try {
+            const { data } = await sbClient.auth.setSession({ access_token: at, refresh_token: rt });
+            if (data.session) {
+              supabaseAuthSession = data.session;
+              window.history.replaceState({}, document.title, window.location.pathname);
+              console.log('OAuth session restored from URL hash');
+            }
+          } catch (e) {
+            console.error('setSession from hash failed:', e);
+          }
         }
       }
 
@@ -1303,16 +1311,26 @@
 
     // Listen for auth state changes (e.g., after OAuth redirect)
     sbClient.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
+      console.log('[Auth] event:', event, 'hasSession:', !!session);
+      if (session) {
         supabaseAuthSession = session;
-        // Re-initialize to pick up the new session
-        init();
+        if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+          init();
+        }
       } else if (event === 'SIGNED_OUT') {
         supabaseAuthSession = null;
         currentUser = null;
         init();
       }
     });
+
+    // Fallback: if OAuth deferred and no onAuthStateChange within 3s, force init
+    setTimeout(() => {
+      if (window._barsOAuthDeferred) {
+        console.log('[Auth] deferred timeout — forced retry');
+        init();
+      }
+    }, 3000);
 
     function updateProfileUI() {
       if (!currentUser) return;
