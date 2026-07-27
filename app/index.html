@@ -1032,7 +1032,7 @@
         const { data, error } = await sbClient.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: 'barsnote://auth/callback',
+            redirectTo: 'https://barsnote.vercel.app/auth-callback.html',
             skipBrowserRedirect: true,
             queryParams: {
               access_type: 'offline',
@@ -1091,7 +1091,7 @@
         const { data, error } = await sbClient.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: 'barsnote://auth/callback',
+            redirectTo: 'https://barsnote.vercel.app/auth-callback.html',
             skipBrowserRedirect: true,
             queryParams: {
               access_type: 'offline',
@@ -1360,9 +1360,10 @@
       App.addListener('appUrlOpen', async (data) => {
         const url = data.url;
         if (url && url.startsWith('barsnote://auth/callback')) {
-          const hash = url.split('#')[1];
-          if (hash) {
-            const params = new URLSearchParams(hash);
+          // Parse query params (auth-callback.html passes tokens as query params, not hash)
+          const queryString = url.includes('?') ? url.split('?')[1] : '';
+          if (queryString) {
+            const params = new URLSearchParams(queryString);
             const access_token = params.get('access_token');
             const refresh_token = params.get('refresh_token');
             if (access_token && refresh_token) {

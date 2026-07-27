@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bars Auth</title>
+</head>
+<body style="background:#05070e;color:#ededed;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:sans-serif;">
+  <div style="text-align:center;">
+    <div style="font-size:24px;font-weight:700;margin-bottom:8px;">Bars</div>
+    <div style="color:#8e95a5;">Завершаем вход...</div>
+  </div>
+  <script>
+    // Extract tokens from URL hash (Supabase puts them there)
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    const access_token = params.get('access_token');
+    const refresh_token = params.get('refresh_token');
+
+    if (access_token && refresh_token) {
+      // Redirect to the app via deep link with query params (more reliable than hash)
+      window.location.href = 'barsnote://auth/callback?access_token=' + encodeURIComponent(access_token) + '&refresh_token=' + encodeURIComponent(refresh_token);
+    } else {
+      // No tokens — redirect to main page
+      document.querySelector('div').innerHTML = '<div style="font-size:24px;font-weight:700;margin-bottom:8px;">Ошибка</div><div style="color:#8e95a5;">Не удалось завершить вход</div>';
+    }
+  </script>
+</body>
+</html>
