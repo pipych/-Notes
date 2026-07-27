@@ -1240,10 +1240,30 @@
         }
 
         // ── TIER 2: Supabase Auth session (Google) ──
-        if (!currentUser) {
-          const { data: { session } } = await sbClient.auth.getSession();
-          if (session) {
-            supabaseAuthSession = session;
+        const { data: { session } } = await sbClient.auth.getSession();
+        if (session) {
+          supabaseAuthSession = session;
+          // Check for Google linking (Telegram user linking Google)
+          const linkingProfileId = sessionStorage.getItem('bars_linking_profile_id');
+          if (linkingProfileId && currentUser) {
+            // Telegram user wants to link Google account
+            sessionStorage.removeItem('bars_linking_profile_id');
+            try {
+              const updated = await supabaseFetch(`/profiles?id=eq.${linkingProfileId}`, {
+                method: 'PATCH',
+                headers: { 'Prefer': 'return=representation' },
+                body: JSON.stringify({
+                  auth_id: session.user.id,
+                  google_email: session.user.email
+                })
+              });
+              if (updated && updated[0]) currentUser = updated[0];
+              console.log('Google linked to Telegram profile:', session.user.email);
+            } catch (e) {
+              console.error('Failed to link Google to profile:', e);
+            }
+          } else if (!currentUser) {
+            // No Telegram user, use Google session as primary auth
             currentUser = await getOrCreateProfileFromSession(session);
           }
         }
