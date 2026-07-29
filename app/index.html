@@ -153,7 +153,7 @@
     body {
       background-color: var(--bg-app);
       color: var(--text-main);
-      padding: 16px 16px calc(env(safe-area-inset-bottom) + 115px) 16px;
+      padding: calc(env(safe-area-inset-top) + 32px) 16px calc(env(safe-area-inset-bottom) + 115px) 16px;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -400,7 +400,7 @@
       inset: 0;
       background: var(--bg-app);
       z-index: 9999;
-      padding: 16px 16px calc(env(safe-area-inset-bottom) + 20px) 16px;
+      padding: calc(env(safe-area-inset-top) + 32px) 16px calc(env(safe-area-inset-bottom) + 20px) 16px;
       display: none;
       flex-direction: column;
       animation: fadeIn 0.2s ease-out;
