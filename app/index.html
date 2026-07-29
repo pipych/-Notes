@@ -1016,8 +1016,6 @@
 
     const APP_URL = 'https://barsnote.vercel.app';
 
-    // ─── Google Auth ──────────────────────────────
-
     async function signInWithGoogle() {
       const btn = document.getElementById('btnGoogleSignIn');
       if (btn) {
@@ -1026,13 +1024,12 @@
         btn.innerText = 'Перенаправление...';
       }
 
-      const redirectTarget = window.location.origin + window.location.pathname;
-      console.log('[Auth] Starting Google OAuth redirect to:', redirectTarget);
+      console.log('[Auth] Starting Google OAuth redirect to:', APP_URL);
 
       const { error } = await sbClient.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectTarget
+          redirectTo: APP_URL
         }
       });
 
@@ -1059,11 +1056,10 @@
         sessionStorage.setItem('bars_linking_profile_id', currentUser.id);
       }
 
-      const redirectTarget = window.location.origin + window.location.pathname;
       const { error } = await sbClient.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectTarget
+          redirectTo: APP_URL
         }
       });
 
