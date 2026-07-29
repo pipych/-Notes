@@ -1014,57 +1014,64 @@
 
     const APP_URL = 'https://barsnote.vercel.app';
 
+    // ─── Google Auth ──────────────────────────────
+
     async function signInWithGoogle() {
       const btn = document.getElementById('btnGoogleSignIn');
-      btn.disabled = true;
-      btn.style.opacity = '0.6';
-      btn.innerText = 'Перенаправление...';
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.innerText = 'Перенаправление...';
+      }
+
+      const redirectTarget = window.location.origin + window.location.pathname;
+      console.log('[Auth] Starting Google OAuth redirect to:', redirectTarget);
 
       const { error } = await sbClient.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: APP_URL,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent'
-          }
+          redirectTo: redirectTarget
         }
       });
 
       if (error) {
-        console.error('Google sign-in error:', error);
-        btn.disabled = false;
-        btn.style.opacity = '1';
-        btn.innerText = 'Ошибка, попробуй снова';
+        console.error('[Auth] Google sign-in error:', error);
+        if (btn) {
+          btn.disabled = false;
+          btn.style.opacity = '1';
+          btn.innerText = 'Войти через Google';
+        }
+        alert('Ошибка входа через Google: ' + error.message);
       }
     }
 
     async function linkGoogleAccount() {
       const btn = document.getElementById('btnLinkGoogle');
-      btn.disabled = true;
-      btn.style.opacity = '0.6';
-      btn.innerText = 'Перенаправление...';
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.innerText = 'Перенаправление...';
+      }
 
       if (currentUser && currentUser.id) {
         sessionStorage.setItem('bars_linking_profile_id', currentUser.id);
       }
 
+      const redirectTarget = window.location.origin + window.location.pathname;
       const { error } = await sbClient.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: APP_URL,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent'
-          }
+          redirectTo: redirectTarget
         }
       });
 
       if (error) {
-        console.error('Link Google error:', error);
-        btn.disabled = false;
-        btn.style.opacity = '1';
-        btn.innerText = 'Привязать Google';
+        console.error('[Auth] Link Google error:', error);
+        if (btn) {
+          btn.disabled = false;
+          btn.style.opacity = '1';
+          btn.innerText = 'Привязать Google';
+        }
         sessionStorage.removeItem('bars_linking_profile_id');
       }
     }
@@ -1077,7 +1084,7 @@
       const authUser = session?.user;
       if (!authUser) return null;
 
-      console.log('[Auth] Getting profile for authenticated user:', authUser.id, authUser.email);
+      console.log('[Auth] Resolving profile for Google user:', authUser.id, authUser.email);
 
       // Check if we're linking to an existing Telegram profile
       const linkingProfileId = sessionStorage.getItem('bars_linking_profile_id');
@@ -1107,15 +1114,15 @@
           return profiles[0];
         }
       } catch (e) {
-        console.error('[Auth] Failed to find profile by auth_id:', e);
+        console.warn('[Auth] Select profile by auth_id error:', e);
       }
 
       // 2. Look up by google_email (for users who signed up previously)
-      try {
-        if (authUser.email) {
+      if (authUser.email) {
+        try {
           const profiles = await supabaseFetch(`/profiles?google_email=eq.${authUser.email}&select=*`);
           if (profiles && profiles.length > 0) {
-            console.log('[Auth] Found profile by email, updating auth_id:', profiles[0].id);
+            console.log('[Auth] Found profile by email, linking auth_id:', profiles[0].id);
             await supabaseFetch(`/profiles?id=eq.${profiles[0].id}`, {
               method: 'PATCH',
               body: JSON.stringify({ auth_id: authUser.id })
@@ -1123,9 +1130,9 @@
             profiles[0].auth_id = authUser.id;
             return profiles[0];
           }
+        } catch (e) {
+          console.warn('[Auth] Select profile by email error:', e);
         }
-      } catch (e) {
-        console.error('[Auth] Failed to find profile by email:', e);
       }
 
       // 3. Create new profile in Supabase DB
@@ -1137,20 +1144,22 @@
           username: '',
           is_guest: false
         };
-        console.log('[Auth] Creating new profile in DB:', newProfilePayload);
+        console.log('[Auth] Inserting new profile into Supabase:', newProfilePayload);
         const created = await supabaseFetch('/profiles', {
           method: 'POST',
           headers: { 'Prefer': 'return=representation' },
           body: JSON.stringify(newProfilePayload)
         });
-        if (created && created[0]) return created[0];
+        if (created && created[0]) {
+          console.log('[Auth] Successfully created profile in DB:', created[0]);
+          return created[0];
+        }
       } catch (e) {
-        console.error('[Auth] DB profile creation failed (RLS/schema constraint):', e);
+        console.warn('[Auth] DB profile creation failed (RLS/schema constraint):', e);
       }
 
-      // 4. In-memory profile fallback if DB write was blocked by RLS/network
-      // Prevents redirect loop when Supabase auth succeeded but DB profiles table rejected write
-      console.warn('[Auth] Using in-memory Google user profile fallback');
+      // 4. In-memory profile fallback
+      console.log('[Auth] Returning fallback in-memory profile');
       return {
         id: authUser.id,
         auth_id: authUser.id,
@@ -1225,52 +1234,19 @@
       isInitializing = true;
 
       try {
-        console.log('[Auth] Starting init()...');
+        console.log('[Auth] Running clean init...');
 
-        // Direct OAuth token handling from URL hash if present
-        const hash = window.location.hash.substring(1);
-        if (hash && hash.includes('access_token')) {
-          console.log('[Auth] Detected access_token in URL hash');
-          const hashParams = new URLSearchParams(hash);
-          const at = hashParams.get('access_token');
-          const rt = hashParams.get('refresh_token');
-
-          // Clean URL hash immediately to avoid reload/history re-triggering
-          window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-
-          if (at && rt) {
-            try {
-              const { data, error } = await sbClient.auth.setSession({ access_token: at, refresh_token: rt });
-              if (error) {
-                console.error('[Auth] setSession error from hash:', error);
-              } else if (data.session) {
-                supabaseAuthSession = data.session;
-                console.log('[Auth] OAuth session set from URL hash');
-              }
-            } catch (e) {
-              console.error('[Auth] setSession exception:', e);
-            }
-          }
-        }
-
+        // 1. Telegram WebApp Check (Runs ONLY when inside Telegram)
         const tg = window.Telegram?.WebApp;
-        if (tg) {
-          tg.ready();
-          tg.expand();
-          if (typeof tg.requestFullscreen === 'function') {
-            tg.requestFullscreen();
-          }
-          if (tg.initData || (tg.platform && tg.platform !== 'unknown')) {
-            document.body.classList.add('in-tg');
-          }
-        }
-
         const tgUser = tg?.initDataUnsafe?.user;
 
-        // ── TIER 1: Telegram user ──
-        if (tgUser) {
-          console.log('[Auth] Tier 1: Telegram user detected:', tgUser.id);
-          let profiles = await supabaseFetch(`/profiles?telegram_id=eq.${tgUser.id}&select=*`);
+        if (tgUser && tgUser.id) {
+          console.log('[Auth] Telegram environment detected:', tgUser.id);
+          document.body.classList.add('in-tg');
+          if (typeof tg.ready === 'function') tg.ready();
+          if (typeof tg.expand === 'function') tg.expand();
+
+          let profiles = await supabaseFetch(`/profiles?telegram_id=eq.${tgUser.id}&select=*`).catch(() => null);
           let profile = profiles && profiles.length > 0 ? profiles[0] : null;
 
           if (!profile) {
@@ -1283,50 +1259,47 @@
                 username: tgUser.username || '',
                 is_guest: false
               })
-            });
+            }).catch(() => null);
             profile = created ? created[0] : null;
           }
 
           if (profile) {
             currentUser = profile;
+            updateProfileUI();
+            await loadNotes();
+            hideAuthScreen();
+            return;
           }
         }
 
-        // ── TIER 2: Supabase Auth session (Google) ──
-        if (!supabaseAuthSession) {
-          const { data: { session } } = await sbClient.auth.getSession();
-          if (session) supabaseAuthSession = session;
-        }
+        // 2. Web / Standalone Google Auth Session Check
+        const { data: { session } } = await sbClient.auth.getSession();
+        console.log('[Auth] getSession() session active?:', !!session);
 
-        if (supabaseAuthSession) {
-          console.log('[Auth] Tier 2: Supabase Auth session active:', supabaseAuthSession.user?.email);
-          const profile = await getOrCreateProfileFromSession(supabaseAuthSession);
-          if (profile) {
-            currentUser = profile;
-            console.log('[Auth] Current user set to:', currentUser.first_name || currentUser.google_email);
+        if (session) {
+          supabaseAuthSession = session;
+          currentUser = await getOrCreateProfileFromSession(session);
+
+          // Clean URL parameters if returned from OAuth redirect
+          if (window.location.hash || window.location.search.includes('code=')) {
+            window.history.replaceState({}, document.title, window.location.pathname);
           }
+
+          updateProfileUI();
+          await loadNotes();
+          hideAuthScreen();
+          console.log('[Auth] Logged in successfully with Google!');
+          return;
         }
 
-        // ── TIER 3: Guest fallback ──
-        if (!currentUser) {
-          console.log('[Auth] Tier 3: Guest mode fallback');
-          let localGuestId = sessionStorage.getItem('guest_id');
-          if (!localGuestId) {
-            localGuestId = 'guest_' + Math.random().toString(36).substr(2, 9);
-            sessionStorage.setItem('guest_id', localGuestId);
-          }
-          currentUser = { id: localGuestId, first_name: 'Гость', is_guest: true };
-        }
-
-        updateProfileUI();
-        await loadNotes();
-        hideAuthScreen();
+        // 3. Not logged in on Web -> Show Auth Screen
+        console.log('[Auth] User not authenticated. Displaying Auth Screen.');
+        currentUser = null;
+        showAuthScreen();
 
       } catch (err) {
-        console.error('[Auth] Error during init():', err);
-        if (!currentUser) {
-          showAuthScreen();
-        }
+        console.error('[Auth] Error in init():', err);
+        showAuthScreen();
       } finally {
         isInitializing = false;
       }
@@ -1337,13 +1310,15 @@
       console.log('[Auth] onAuthStateChange event:', event, 'hasSession:', !!session);
       if (session) {
         supabaseAuthSession = session;
-      }
-      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
-        init();
-      } else if (event === 'SIGNED_OUT') {
+      } else {
         supabaseAuthSession = null;
         currentUser = null;
+      }
+
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
         init();
+      } else if (event === 'SIGNED_OUT') {
+        showAuthScreen();
       }
     });
 
