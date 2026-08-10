@@ -1367,10 +1367,19 @@
     function openProfile() {
       updateProfileUI();
       document.getElementById('profileScreen').style.display = 'flex';
+      if (!history.state || history.state.screen !== 'profile') {
+        history.pushState({ screen: 'profile' }, '');
+      }
     }
 
-    function closeProfile() {
-      document.getElementById('profileScreen').style.display = 'none';
+    function closeProfile(fromButtonClick = true) {
+      const el = document.getElementById('profileScreen');
+      if (el.style.display === 'flex') {
+        el.style.display = 'none';
+        if (fromButtonClick && history.state && history.state.screen === 'profile') {
+          history.back();
+        }
+      }
     }
 
     async function loadNotes() {
@@ -1642,12 +1651,33 @@
       renderChatUI();
       setSaveState('saved');
       editor.style.display = 'flex';
+
+      if (!history.state || history.state.screen !== 'editor') {
+        history.pushState({ screen: 'editor' }, '');
+      }
     }
 
-    function closeEditor() {
-      document.getElementById('editorScreen').style.display = 'none';
-      renderNotes();
+    function closeEditor(fromButtonClick = true) {
+      const editor = document.getElementById('editorScreen');
+      if (editor.style.display === 'flex') {
+        editor.style.display = 'none';
+        renderNotes();
+        if (fromButtonClick && history.state && history.state.screen === 'editor') {
+          history.back();
+        }
+      }
     }
+
+    window.addEventListener('popstate', (e) => {
+      const editorScreen = document.getElementById('editorScreen');
+      const profileScreen = document.getElementById('profileScreen');
+
+      if (editorScreen && editorScreen.style.display === 'flex') {
+        closeEditor(false);
+      } else if (profileScreen && profileScreen.style.display === 'flex') {
+        closeProfile(false);
+      }
+    });
 
     function handleAutoSave() {
       setSaveState('saving');
