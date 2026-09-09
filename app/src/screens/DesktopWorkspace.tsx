@@ -77,6 +77,7 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showToast, setShowToast] = useState<string | null>(null);
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
 
   // Editor states
   const activeNote = notes.find((n) => n.id === currentNoteId) || null;
@@ -91,11 +92,18 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
     }
   };
 
+  const titleInputRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef(title);
   const contentRef = useRef(content);
   const isTypingRef = useRef(false);
   const autoSaveTimerRef = useRef<any>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (currentNoteId) {
+      setIsCreatingNew(false);
+    }
+  }, [currentNoteId]);
 
   useEffect(() => {
     titleRef.current = title;
@@ -106,11 +114,22 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
     if (activeNote && !isTypingRef.current) {
       setTitle(activeNote.title || '');
       setContent(activeNote.content || '');
-    } else if (!activeNote) {
+    } else if (!activeNote && !isCreatingNew) {
       setTitle('');
       setContent('');
     }
-  }, [activeNote?.id, activeNote?.title, activeNote?.content]);
+  }, [activeNote?.id, activeNote?.title, activeNote?.content, isCreatingNew]);
+
+  const handleCreateNew = () => {
+    onNewNote(false);
+    onSelectNote(null);
+    setIsCreatingNew(true);
+    setTitle('');
+    setContent('');
+    setTimeout(() => {
+      titleInputRef.current?.focus();
+    }, 60);
+  };
 
   const scheduleSave = (newTitle: string, newContent: string) => {
     isTypingRef.current = true;
@@ -219,28 +238,18 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
         {/* New Note Button */}
         <div className="p-3 flex-shrink-0">
           {isSidebarExpanded ? (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => onNewNote(false)}
-                className="flex-1 h-11 px-4 rounded-full bg-m3-primary text-[#041E49] font-nunito font-bold text-[14px] flex items-center justify-center gap-2 shadow hover:brightness-105 active:scale-95 transition-all focus:outline-none"
-              >
-                <MaterialIcon name="add" size={18} weight={600} />
-                <span>Новый трек</span>
-              </button>
-
-              <button
-                onClick={() => onNewNote(true)}
-                title="Создать набросок"
-                className="w-11 h-11 rounded-full bg-m3-surface-container-high text-m3-on-surface flex items-center justify-center hover:bg-m3-surface-container-highest active:scale-95 transition-all focus:outline-none flex-shrink-0"
-              >
-                <MaterialIcon name="edit" size={18} />
-              </button>
-            </div>
+            <button
+              onClick={handleCreateNew}
+              className="w-full h-11 px-4 rounded-full bg-m3-primary text-[#041E49] font-nunito font-bold text-[14px] flex items-center justify-center gap-2 shadow hover:brightness-105 active:scale-95 transition-all focus:outline-none"
+            >
+              <MaterialIcon name="add" size={18} weight={600} />
+              <span>Новый трек</span>
+            </button>
           ) : (
             <button
-              onClick={() => onNewNote(false)}
+              onClick={handleCreateNew}
               className="w-12 h-12 rounded-[18px] bg-m3-primary text-[#041E49] flex items-center justify-center mx-auto shadow hover:brightness-105 active:scale-95 transition-all focus:outline-none"
-              title="Создать трек"
+              title="Новый трек"
             >
               <MaterialIcon name="add" size={22} weight={600} />
             </button>
@@ -382,7 +391,26 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
 
         {/* Notes List Scroll Area */}
         <div className="flex-1 overflow-y-auto px-3 py-2">
-          {filteredNotes.length === 0 ? (
+          {/* Active draft card when creating a new note */}
+          {isCreatingNew && !activeNote && (
+            <div className="mb-2 p-3 rounded-[16px] bg-m3-surface-container-high shadow-sm ring-1 ring-m3-primary/40 transition-all">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                  <span className="font-nunito text-[15px] leading-5 font-bold text-m3-primary truncate">
+                    {title.trim() || 'Новый трек'}
+                  </span>
+                </div>
+                <span className="text-m3-on-surface-variant text-[11px] flex-shrink-0">
+                  Сейчас
+                </span>
+              </div>
+              <div className="mt-1 text-m3-on-surface-variant text-[12px] leading-4 truncate font-nunito">
+                {content.trim() || 'Черновик трека...'}
+              </div>
+            </div>
+          )}
+
+          {filteredNotes.length === 0 && !isCreatingNew ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-6 text-m3-outline">
               <MaterialIcon name="search_off" size={48} className="mb-2 text-m3-outline" />
               <div className="font-nunito font-semibold text-[15px] text-m3-on-surface-variant">
@@ -401,7 +429,7 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
 
                 <div className="flex flex-col gap-1 mt-1">
                   {group.notes.map((note) => {
-                    const isSelected = note.id === currentNoteId;
+                    const isSelected = !isCreatingNew && note.id === currentNoteId;
                     const isTrack = Boolean(note.title && note.title.trim().length > 0);
                     const noteTitle = isTrack
                       ? note.title
@@ -411,10 +439,13 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
                     return (
                       <div
                         key={note.id}
-                        onClick={() => onSelectNote(note.id)}
+                        onClick={() => {
+                          setIsCreatingNew(false);
+                          onSelectNote(note.id);
+                        }}
                         className={`group relative p-3 rounded-[16px] cursor-pointer transition-all ${
                           isSelected
-                            ? 'bg-m3-surface-container-high border-l-4 border-m3-primary shadow'
+                            ? 'bg-m3-surface-container-high shadow-sm ring-1 ring-white/10'
                             : 'bg-m3-surface-container/60 hover:bg-m3-surface-container hover:shadow-sm'
                         }`}
                       >
@@ -469,7 +500,7 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
 
       {/* ─── 3. RIGHT PANEL: NOTE EDITOR & AI RHYMES PANE ────────────── */}
       <main className="flex-1 h-full flex flex-row overflow-hidden bg-m3-bg relative">
-        {activeNote ? (
+        {(activeNote || isCreatingNew) ? (
           <>
             {/* Main Text Editor Section */}
             <div className="flex-1 h-full flex flex-col overflow-hidden">
@@ -477,11 +508,11 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
               <div className="h-16 flex items-center justify-between px-6 border-b border-m3-outline-variant/15 flex-shrink-0 bg-m3-bg/80 backdrop-blur-md">
                 <div className="flex items-center gap-2">
                   <span className="text-m3-on-surface-variant font-nunito text-[13px] font-medium">
-                    {activeNote.title ? 'Треки' : 'Наброски'}
+                    {activeNote?.title ? 'Треки' : 'Треки'}
                   </span>
                   <span className="text-m3-outline">/</span>
                   <span className="text-m3-on-surface font-nunito text-[13px] font-semibold truncate max-w-xs">
-                    {activeNote.title || 'Без названия'}
+                    {activeNote?.title || title || 'Новый трек'}
                   </span>
                 </div>
 
@@ -499,21 +530,25 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
 
                   {/* Collaborators Button */}
                   <button
+                    disabled={!activeNote}
                     onClick={() => {
+                      if (!activeNote) return;
                       onRefreshCollab();
                       setShowCollabModal(true);
                     }}
                     className={`h-10 px-3.5 rounded-full flex items-center gap-2 transition-all focus:outline-none ${
-                      activeNote.is_shared || collaborators.length > 0
+                      !activeNote
+                        ? 'opacity-40 cursor-not-allowed bg-m3-surface-container-high text-m3-on-surface'
+                        : activeNote.is_shared || collaborators.length > 0
                         ? 'bg-m3-primary-container text-m3-on-primary-container font-bold'
                         : 'bg-m3-surface-container-high text-m3-on-surface hover:bg-m3-surface-container-highest font-medium'
                     }`}
-                    title="Совместный доступ"
+                    title={activeNote ? 'Совместный доступ' : 'Сохраните трек для добавления соавторов'}
                   >
                     <MaterialIcon
                       name="group"
                       size={18}
-                      filled={activeNote.is_shared || collaborators.length > 0}
+                      filled={Boolean(activeNote && (activeNote.is_shared || collaborators.length > 0))}
                     />
                     <span className="font-nunito text-[13px]">Соавторы</span>
                   </button>
@@ -543,7 +578,15 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
 
                   {/* Delete Button */}
                   <GlassIconButton
-                    onClick={() => setShowDeleteConfirm(true)}
+                    onClick={() => {
+                      if (!activeNote && isCreatingNew) {
+                        setIsCreatingNew(false);
+                        setTitle('');
+                        setContent('');
+                        return;
+                      }
+                      setShowDeleteConfirm(true);
+                    }}
                     ariaLabel="Удалить заметку"
                     icon={
                       <MaterialIcon
@@ -560,6 +603,7 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
               <div className="flex-1 overflow-y-auto px-8 py-6 max-w-4xl w-full mx-auto flex flex-col">
                 {/* Title */}
                 <input
+                  ref={titleInputRef}
                   type="text"
                   value={title}
                   onChange={handleTitleChange}
@@ -603,7 +647,7 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
               Или создайте новый трек, чтобы начать писать текст с подбором сочных рифм от AI
             </div>
             <button
-              onClick={() => onNewNote(false)}
+              onClick={handleCreateNew}
               className="px-6 py-3 rounded-full bg-m3-primary text-[#041E49] font-nunito font-bold text-[14px] flex items-center gap-2 shadow hover:brightness-105 active:scale-95 transition-all focus:outline-none"
             >
               <MaterialIcon name="add" size={18} weight={600} />
@@ -676,6 +720,10 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
                   setShowDeleteConfirm(false);
                   if (currentNoteId) {
                     await onDeleteNote(currentNoteId);
+                  } else if (isCreatingNew) {
+                    setIsCreatingNew(false);
+                    setTitle('');
+                    setContent('');
                   }
                 }}
                 className="px-4 py-2 rounded-full bg-m3-error-container text-m3-error font-nunito font-bold text-[14px] focus:outline-none active:scale-95 transition-transform"
