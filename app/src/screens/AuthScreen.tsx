@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { MaterialIcon } from '../components/MaterialIcon';
 
 interface AuthScreenProps {
   onGoogleSignIn: () => Promise<void>;
@@ -35,15 +36,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onGoogleSignIn }) => {
       <div className="mt-11 w-full max-w-xs flex justify-center">
         {isLoading ? (
           <div className="w-10 h-10 flex items-center justify-center">
-            <svg
-              className="animate-spin w-8 h-8 text-white"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
-              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-            </svg>
+            <MaterialIcon name="sync" size={32} className="animate-spin text-white" />
           </div>
         ) : (
           <button

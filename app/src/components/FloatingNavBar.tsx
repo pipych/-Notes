@@ -1,5 +1,6 @@
 import React from 'react';
 import { TabType } from '../types';
+import { MaterialIcon } from './MaterialIcon';
 
 interface FloatingNavBarProps {
   selectedTab: TabType;
@@ -45,41 +46,15 @@ export const FloatingNavBar: React.FC<FloatingNavBarProps> = ({
                 }`}
               >
                 {tab.id === 'tracks' && (
-                  isSelected ? (
-                    // Music Note Filled
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-                    </svg>
-                  ) : (
-                    // Music Note Outlined
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M9 18V5l12-2v13" />
-                      <circle cx="6" cy="18" r="3" />
-                      <circle cx="18" cy="16" r="3" />
-                    </svg>
-                  )
+                  <MaterialIcon name="music_note" filled={isSelected} size={22} />
                 )}
 
                 {tab.id === 'drafts' && (
-                  isSelected ? (
-                    // Edit Filled
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-                    </svg>
-                  ) : (
-                    // Edit Outlined
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                      <path d="m15 5 4 4" />
-                    </svg>
-                  )
+                  <MaterialIcon name="edit" filled={isSelected} size={20} />
                 )}
 
                 {tab.id === 'search' && (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isSelected ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="8" />
-                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                  </svg>
+                  <MaterialIcon name="search" filled={isSelected} size={22} weight={isSelected ? 600 : 400} />
                 )}
               </div>
             </div>

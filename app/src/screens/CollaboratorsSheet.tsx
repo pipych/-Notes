@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { NoteCollaborator, NoteInvitation, UserProfile } from '../types';
 import { BottomSheet } from '../components/BottomSheet';
 import { GlassSearchBar } from '../components/GlassSearchBar';
+import { MaterialIcon } from '../components/MaterialIcon';
 
 interface CollaboratorsSheetProps {
   isOpen: boolean;
@@ -69,15 +70,7 @@ export const CollaboratorsSheet: React.FC<CollaboratorsSheetProps> = ({
           </div>
 
           {isLoading && (
-            <svg
-              className="animate-spin w-5 h-5 text-m3-primary"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
-              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-            </svg>
+            <MaterialIcon name="sync" size={20} className="animate-spin text-m3-primary" />
           )}
         </div>
 
@@ -143,10 +136,7 @@ export const CollaboratorsSheet: React.FC<CollaboratorsSheetProps> = ({
                       className="w-8 h-8 rounded-full flex items-center justify-center text-m3-error hover:bg-m3-error/10 focus:outline-none"
                       title="Удалить соавтора"
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
-                      </svg>
+                      <MaterialIcon name="close" size={18} />
                     </button>
                   ) : (
                     <div className="px-2.5 py-1 rounded-[8px] bg-m3-secondary-container/50 text-m3-on-secondary-container text-[12px] font-nunito">
@@ -246,9 +236,7 @@ export const CollaboratorsSheet: React.FC<CollaboratorsSheetProps> = ({
 
                     {hasSent ? (
                       <div className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] bg-m3-surface-container text-m3-primary text-[12px] font-nunito font-bold">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
+                        <MaterialIcon name="check" size={14} />
                         <span>Отправлено</span>
                       </div>
                     ) : (
@@ -256,21 +244,7 @@ export const CollaboratorsSheet: React.FC<CollaboratorsSheetProps> = ({
                         onClick={() => onInviteUser(user)}
                         className="h-[34px] px-3.5 rounded-full bg-m3-primary text-[#041E49] text-[13px] font-nunito font-bold flex items-center gap-1.5 shadow transition-transform active:scale-95 focus:outline-none"
                       >
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="#041E49"
-                          strokeWidth="2.2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                          <circle cx="8.5" cy="7" r="4" />
-                          <line x1="20" y1="8" x2="20" y2="14" />
-                          <line x1="23" y1="11" x2="17" y2="11" />
-                        </svg>
+                        <MaterialIcon name="person_add" size={18} />
                         <span>Пригласить</span>
                       </button>
                     )}

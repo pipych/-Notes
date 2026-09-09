@@ -8,6 +8,7 @@ import { PulsingFab } from '../components/PulsingFab';
 import { InvitationsBanner } from '../components/InvitationsBanner';
 import { GlassSearchBar } from '../components/GlassSearchBar';
 import { GlassIconButton } from '../components/GlassIconButton';
+import { MaterialIcon } from '../components/MaterialIcon';
 
 interface NotesListScreenProps {
   notes: Note[];
@@ -84,11 +85,7 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
         <GlassIconButton
           onClick={onOpenProfile}
           ariaLabel="Профиль"
-          icon={
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-            </svg>
-          }
+          icon={<MaterialIcon name="person" size={22} />}
         />
       </div>
 
@@ -113,29 +110,14 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
           <>
             {tracks.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center pt-24 text-center">
-                <svg
-                  className="w-16 h-16 text-m3-outline mb-4"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
-                  <path d="M6 6h10" />
-                  <path d="M6 10h10" />
-                </svg>
+                <MaterialIcon name="music_note" size={60} className="text-m3-outline mb-4" />
                 <div className="text-m3-on-surface-variant font-nunito font-semibold text-[17px] mb-2">
                   Треков пока нет
                 </div>
                 <div className="flex items-center gap-1.5 text-m3-outline text-[14px] font-nunito">
                   <span>Нажми на</span>
                   <div className="w-6 h-6 rounded-full bg-m3-surface-container-high flex items-center justify-center text-m3-on-surface">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="12" y1="5" x2="12" y2="19" />
-                      <line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
+                    <MaterialIcon name="add" size={16} />
                   </div>
                   <span>чтобы написать трек</span>
                 </div>
@@ -172,29 +154,14 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
           <>
             {drafts.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center pt-24 text-center">
-                <svg
-                  className="w-16 h-16 text-m3-outline mb-4"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
-                  <path d="M6 6h10" />
-                  <path d="M6 10h10" />
-                </svg>
+                <MaterialIcon name="edit" size={60} className="text-m3-outline mb-4" />
                 <div className="text-m3-on-surface-variant font-nunito font-semibold text-[17px] mb-2">
                   Набросков пока нет
                 </div>
                 <div className="flex items-center gap-1.5 text-m3-outline text-[14px] font-nunito">
                   <span>Нажми на</span>
                   <div className="w-6 h-6 rounded-full bg-m3-surface-container-high flex items-center justify-center text-m3-on-surface">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="12" y1="5" x2="12" y2="19" />
-                      <line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
+                    <MaterialIcon name="add" size={16} />
                   </div>
                   <span>чтобы создать набросок</span>
                 </div>
@@ -231,18 +198,7 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
           <div className="flex-1 flex flex-col">
             {searchQuery.trim().length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center pt-20 text-center">
-                <svg
-                  className="w-14 h-14 text-m3-on-surface-variant/40 mb-3"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
+                <MaterialIcon name="search" size={56} className="text-m3-on-surface-variant/40 mb-3" />
                 <div className="text-m3-on-surface font-nunito font-semibold text-[17px] mb-1">
                   Поиск по трекам и наброскам
                 </div>

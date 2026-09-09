@@ -1,6 +1,7 @@
 import React from 'react';
 import { UserProfile } from '../types';
 import { GlassIconButton } from '../components/GlassIconButton';
+import { MaterialIcon } from '../components/MaterialIcon';
 
 interface ProfileScreenProps {
   user: UserProfile;
@@ -28,12 +29,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         <GlassIconButton
           onClick={onBack}
           ariaLabel="Назад"
-          icon={
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
-            </svg>
-          }
+          icon={<MaterialIcon name="arrow_back" size={22} />}
         />
 
         <span className="font-nunito font-bold text-m3-on-background text-[17px]">
@@ -47,9 +43,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       <div className="flex-1 flex flex-col items-center pt-6">
         {/* Avatar */}
         <div className="w-24 h-24 rounded-full bg-m3-surface-container-high flex items-center justify-center text-m3-on-surface shadow-md">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-          </svg>
+          <MaterialIcon name="person" size={54} />
         </div>
 
         {/* User Name */}
@@ -77,10 +71,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
           {isGoogleLinked ? (
             <div className="px-4 py-2 rounded-full bg-m3-success-container flex items-center gap-2 text-m3-success text-[13px] font-nunito font-medium">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                <polyline points="22 4 12 14.01 9 11.01" />
-              </svg>
+              <MaterialIcon name="check_circle" size={18} />
               <span>Google аккаунт синхронизирован</span>
             </div>
           ) : (
@@ -100,11 +91,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           onClick={onLogout}
           className="w-full max-w-xs mb-8 py-3 rounded-full bg-m3-error-container text-m3-on-error-container font-nunito font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-95 transition-transform focus:outline-none shadow"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
-          </svg>
+          <MaterialIcon name="logout" size={18} />
           <span>Выйти из аккаунта</span>
         </button>
       </div>

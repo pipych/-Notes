@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Note } from '../types';
 import { formatDisplayDate } from '../utils/dateGrouping';
+import { MaterialIcon } from './MaterialIcon';
 
 interface NoteItemViewProps {
   note: Note;
@@ -105,21 +106,7 @@ export const NoteItemView: React.FC<NoteItemViewProps> = ({
           opacity: Math.min(1, Math.abs(translateX) / 60),
         }}
       >
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#F9DEDC"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <polyline points="3 6 5 6 21 6" />
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-          <line x1="10" y1="11" x2="10" y2="17" />
-          <line x1="14" y1="11" x2="14" y2="17" />
-        </svg>
+        <MaterialIcon name="delete" size={24} className="text-[#F9DEDC]" />
       </div>
 
       {/* Main Card Surface */}
@@ -141,22 +128,7 @@ export const NoteItemView: React.FC<NoteItemViewProps> = ({
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-1.5 flex-1 pr-3 min-w-0">
             {note.is_shared && (
-              <svg
-                width="17"
-                height="17"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#A8C7FA"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="flex-shrink-0"
-              >
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
+              <MaterialIcon name="group" size={17} className="text-m3-primary flex-shrink-0" />
             )}
             <span className="font-nunito font-bold text-m3-on-surface text-[17px] leading-[22px] truncate">
               {displayTitle}

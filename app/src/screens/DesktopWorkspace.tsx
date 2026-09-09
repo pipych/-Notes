@@ -7,6 +7,7 @@ import { GlassIconButton } from '../components/GlassIconButton';
 import { AiRhymesPanel } from './AiRhymesPanel';
 import { CollaboratorsSheet } from './CollaboratorsSheet';
 import { ProfileScreen } from './ProfileScreen';
+import { MaterialIcon } from '../components/MaterialIcon';
 
 interface DesktopWorkspaceProps {
   notes: Note[];
@@ -201,30 +202,7 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
             className="w-10 h-10 rounded-full flex items-center justify-center text-m3-on-surface-variant hover:bg-m3-surface-container hover:text-m3-on-surface active:scale-95 transition-all focus:outline-none"
             title={isSidebarExpanded ? 'Свернуть боковую панель' : 'Развернуть боковую панель'}
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              {isSidebarExpanded ? (
-                <>
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                  <line x1="9" y1="3" x2="9" y2="21" />
-                  <path d="m14 15-3-3 3-3" />
-                </>
-              ) : (
-                <>
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                  <line x1="9" y1="3" x2="9" y2="21" />
-                  <path d="m12 9 3 3-3 3" />
-                </>
-              )}
-            </svg>
+            <MaterialIcon name={isSidebarExpanded ? 'menu_open' : 'menu'} size={22} />
           </button>
         </div>
 
@@ -236,10 +214,7 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
                 onClick={() => onNewNote(false)}
                 className="flex-1 h-11 px-4 rounded-full bg-m3-primary text-[#041E49] font-nunito font-bold text-[14px] flex items-center justify-center gap-2 shadow hover:brightness-105 active:scale-95 transition-all focus:outline-none"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
+                <MaterialIcon name="add" size={18} weight={600} />
                 <span>Новый трек</span>
               </button>
 
@@ -248,10 +223,7 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
                 title="Создать набросок"
                 className="w-11 h-11 rounded-full bg-m3-surface-container-high text-m3-on-surface flex items-center justify-center hover:bg-m3-surface-container-highest active:scale-95 transition-all focus:outline-none flex-shrink-0"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                  <path d="m15 5 4 4" />
-                </svg>
+                <MaterialIcon name="edit" size={18} />
               </button>
             </div>
           ) : (
@@ -260,10 +232,7 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
               className="w-12 h-12 rounded-[18px] bg-m3-primary text-[#041E49] flex items-center justify-center mx-auto shadow hover:brightness-105 active:scale-95 transition-all focus:outline-none"
               title="Создать трек"
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
+              <MaterialIcon name="add" size={22} weight={600} />
             </button>
           )}
         </div>
@@ -281,9 +250,7 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
             title="Треки"
           >
             <div className="flex items-center gap-3">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-              </svg>
+              <MaterialIcon name="music_note" size={20} filled={selectedFolder === 'tracks'} />
               {isSidebarExpanded && <span>Треки</span>}
             </div>
             {isSidebarExpanded && (
@@ -304,10 +271,7 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
             title="Наброски"
           >
             <div className="flex items-center gap-3">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                <path d="m15 5 4 4" />
-              </svg>
+              <MaterialIcon name="edit" size={20} filled={selectedFolder === 'drafts'} />
               {isSidebarExpanded && <span>Наброски</span>}
             </div>
             {isSidebarExpanded && (
@@ -328,14 +292,7 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
             title="Все заметки"
           >
             <div className="flex items-center gap-3">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="8" y1="6" x2="21" y2="6" />
-                <line x1="8" y1="12" x2="21" y2="12" />
-                <line x1="8" y1="18" x2="21" y2="18" />
-                <line x1="3" y1="6" x2="3.01" y2="6" />
-                <line x1="3" y1="12" x2="3.01" y2="12" />
-                <line x1="3" y1="18" x2="3.01" y2="18" />
-              </svg>
+              <MaterialIcon name="folder" size={20} filled={selectedFolder === 'all'} />
               {isSidebarExpanded && <span>Все заметки</span>}
             </div>
             {isSidebarExpanded && (
@@ -417,10 +374,7 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
         <div className="flex-1 overflow-y-auto px-3 py-2">
           {filteredNotes.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-6 text-m3-outline">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="mb-2">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
+              <MaterialIcon name="search_off" size={48} className="mb-2 text-m3-outline" />
               <div className="font-nunito font-semibold text-[15px] text-m3-on-surface-variant">
                 Ничего не найдено
               </div>
@@ -457,10 +411,7 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-1.5 min-w-0 flex-1">
                             {note.is_shared && (
-                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A8C7FA" strokeWidth="2.2" className="flex-shrink-0">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                <circle cx="9" cy="7" r="4" />
-                              </svg>
+                              <MaterialIcon name="group" size={16} filled className="text-[#A8C7FA] flex-shrink-0" />
                             )}
                             <span className={`font-nunito text-[15px] leading-5 truncate ${isSelected ? 'font-bold text-m3-on-surface' : 'font-semibold text-m3-on-surface/90'}`}>
                               {noteTitle}
@@ -494,10 +445,7 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
                           className="absolute right-2 bottom-2 w-7 h-7 rounded-full bg-m3-surface-container-highest text-m3-outline hover:text-m3-error hover:bg-m3-error-container/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity focus:outline-none"
                           title="Удалить заметку"
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                          </svg>
+                          <MaterialIcon name="delete" size={16} />
                         </button>
                       </div>
                     );
@@ -542,12 +490,11 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
                     }`}
                     title="Совместный доступ"
                   >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                      <circle cx="8.5" cy="7" r="4" />
-                      <line x1="20" y1="8" x2="20" y2="14" />
-                      <line x1="23" y1="11" x2="17" y2="11" />
-                    </svg>
+                    <MaterialIcon
+                      name="group"
+                      size={18}
+                      filled={activeNote.is_shared || collaborators.length > 0}
+                    />
                     <span className="font-nunito text-[13px]">Соавторы</span>
                   </button>
 
@@ -561,9 +508,11 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
                     }`}
                     title="Рифмы AI"
                   >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill={isAiPaneOpen ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-                    </svg>
+                    <MaterialIcon
+                      name="auto_awesome"
+                      size={18}
+                      filled={isAiPaneOpen}
+                    />
                     <span className="font-nunito text-[13px]">Рифмы AI</span>
                   </button>
 
@@ -577,10 +526,11 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
                     onClick={() => setShowDeleteConfirm(true)}
                     ariaLabel="Удалить заметку"
                     icon={
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-m3-error">
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                      </svg>
+                      <MaterialIcon
+                        name="delete"
+                        size={18}
+                        className="text-m3-error"
+                      />
                     }
                   />
                 </div>
@@ -624,9 +574,7 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
           /* Empty Workspace State */
           <div className="flex-1 h-full flex flex-col items-center justify-center text-center p-8 text-m3-outline">
             <div className="w-20 h-20 rounded-full bg-m3-surface-container-high flex items-center justify-center text-m3-outline mb-4">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-              </svg>
+              <MaterialIcon name="music_note" size={40} />
             </div>
             <div className="font-nunito font-bold text-[20px] text-m3-on-surface mb-2">
               Выберите заметку для просмотра
@@ -638,10 +586,7 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
               onClick={() => onNewNote(false)}
               className="px-6 py-3 rounded-full bg-m3-primary text-[#041E49] font-nunito font-bold text-[14px] flex items-center gap-2 shadow hover:brightness-105 active:scale-95 transition-all focus:outline-none"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
+              <MaterialIcon name="add" size={18} weight={600} />
               <span>Написать трек</span>
             </button>
           </div>

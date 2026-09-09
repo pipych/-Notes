@@ -9,6 +9,7 @@ import { NotesListScreen } from './screens/NotesListScreen';
 import { NoteEditorScreen } from './screens/NoteEditorScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { DesktopWorkspace } from './screens/DesktopWorkspace';
+import { MaterialIcon } from './components/MaterialIcon';
 
 export const App: React.FC = () => {
   const isDesktop = useMediaQuery('(min-width: 1024px)');
@@ -564,15 +565,7 @@ export const App: React.FC = () => {
   if (!isAuthReady) {
     return (
       <div className="w-full h-screen bg-m3-bg flex items-center justify-center text-m3-primary">
-        <svg
-          className="animate-spin w-10 h-10"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-        >
-          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-        </svg>
+        <MaterialIcon name="sync" size={40} className="animate-spin text-m3-primary" />
       </div>
     );
   }
