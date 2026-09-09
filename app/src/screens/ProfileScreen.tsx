@@ -84,6 +84,21 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           )}
         </div>
 
+        {/* Android APK Download Card */}
+        <div className="w-full max-w-sm mt-4 rounded-[20px] bg-m3-surface-container p-5 flex flex-col items-center gap-3 shadow">
+          <div className="font-nunito font-semibold text-[14px] text-m3-on-surface-variant">
+            Android приложение
+          </div>
+          <a
+            href="/bars.apk"
+            download="bars.apk"
+            className="w-full py-2.5 px-4 rounded-full bg-m3-surface-container-high text-m3-primary font-nunito font-bold text-[14px] flex items-center justify-center gap-2 hover:bg-m3-surface-container-highest active:scale-95 transition-all text-center focus:outline-none"
+          >
+            <MaterialIcon name="android" size={20} />
+            <span>Скачать bars.apk</span>
+          </a>
+        </div>
+
         <div className="flex-1" />
 
         {/* Logout Button */}
