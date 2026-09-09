@@ -35,7 +35,7 @@
   --tg-safe-top: var(--tg-content-safe-area-inset-top, var(--tg-safe-area-inset-top, 0px));
   --tg-safe-bottom: var(--tg-content-safe-area-inset-bottom, var(--tg-safe-area-inset-bottom, 0px));
   /* Mobile top inset to prevent Telegram header, close buttons, or notch from overlapping */
-  --mobile-top-padding: max(calc(var(--tg-content-safe-area-inset-top, 0px) + 24px), calc(env(safe-area-inset-top, 0px) + 76px), 76px);
+  --mobile-top-padding: max(calc(var(--tg-content-safe-area-inset-top, 0px) + 38px), calc(env(safe-area-inset-top, 0px) + 94px), 94px);
   /* Mobile bottom inset to lift floating nav bar and FAB comfortably above bottom bezels & home bar */
   --mobile-bottom-inset: calc(max(var(--tg-content-safe-area-inset-bottom, 0px), env(safe-area-inset-bottom, 0px), 0px) + 32px);
 }

@@ -22,7 +22,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onGoogleSignIn }) => {
   return (
     <div
       className="relative w-full h-[100dvh] bg-m3-bg flex flex-col items-center justify-center px-8 select-none"
-      style={{ paddingTop: 'var(--mobile-top-padding, 76px)' }}
+      style={{ paddingTop: 'calc(var(--mobile-top-padding, 94px) + 10px)' }}
     >
       {/* App Logo */}
       <h1 className="text-[54px] font-nunito font-extrabold text-m3-on-background tracking-[-1px]">

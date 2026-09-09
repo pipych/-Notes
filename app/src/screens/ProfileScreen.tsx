@@ -24,7 +24,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       {/* Top Header */}
       <div
         className="w-full flex items-center justify-between pb-2 flex-shrink-0 z-20"
-        style={{ paddingTop: 'calc(var(--mobile-top-padding, 76px) + 8px)' }}
+        style={{ paddingTop: 'calc(var(--mobile-top-padding, 94px) + 10px)' }}
       >
         <GlassIconButton
           onClick={onBack}

@@ -64,7 +64,7 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
       {/* Pinned Top Bar (safe below Telegram header and notch) */}
       <div
         className="w-full flex items-center justify-between px-4 pb-2 z-30 flex-shrink-0 bg-m3-bg/85 backdrop-blur-md"
-        style={{ paddingTop: 'calc(var(--mobile-top-padding, 76px) + 8px)' }}
+        style={{ paddingTop: 'calc(var(--mobile-top-padding, 94px) + 10px)' }}
       >
         {currentTab === 'search' ? (
           <div className="flex-1 mr-3">
