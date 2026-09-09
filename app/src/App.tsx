@@ -240,6 +240,30 @@ export const App: React.FC = () => {
     return () => clearInterval(collabInterval);
   }, [isDesktop, currentScreen, currentNoteId, currentUser]);
 
+  // ─── Telegram WebApp Native Back Button ─────────────────────────────
+  useEffect(() => {
+    const tg = (window as any).Telegram?.WebApp;
+    if (!tg?.BackButton) return;
+
+    if (currentScreen === 'editor' || currentScreen === 'profile') {
+      tg.BackButton.show();
+      const handleTgBack = () => {
+        if (currentScreen === 'editor') {
+          setCurrentScreen('list');
+          setCurrentNoteId(null);
+        } else if (currentScreen === 'profile') {
+          setCurrentScreen('list');
+        }
+      };
+      tg.BackButton.onClick(handleTgBack);
+      return () => {
+        tg.BackButton.offClick(handleTgBack);
+      };
+    } else {
+      tg.BackButton.hide();
+    }
+  }, [currentScreen]);
+
   // ─── Collaboration Data for Modal ────────────────────────────────────
   const loadCollabData = useCallback(async () => {
     const noteId = currentNoteIdRef.current;
@@ -598,8 +622,8 @@ export const App: React.FC = () => {
 
   // ─── 📱 MOBILE / TABLET WORKSPACE (Android Native 1:1) ──────────────
   return (
-    <div className="w-full h-full min-h-screen bg-m3-bg text-m3-on-background font-nunito flex flex-col items-center">
-      <div className="w-full max-w-md h-full min-h-screen flex flex-col relative">
+    <div className="w-full min-h-[100dvh] h-full bg-m3-bg text-m3-on-background font-nunito flex flex-col items-center">
+      <div className="w-full max-w-md min-h-[100dvh] h-full flex flex-col relative overflow-hidden">
         {currentScreen === 'list' && (
           <NotesListScreen
             notes={notes}

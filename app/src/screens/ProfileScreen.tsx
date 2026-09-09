@@ -19,9 +19,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const displayName = user.first_name || (user.username ? `@${user.username}` : '') || user.google_email || 'Пользователь';
 
   return (
-    <div className="relative w-full h-full min-h-screen bg-m3-bg flex flex-col px-5 py-3 select-none">
+    <div className="relative w-full h-[100dvh] bg-m3-bg flex flex-col px-5 pb-6 select-none overflow-y-auto">
       {/* Top Header */}
-      <div className="w-full flex items-center justify-between py-2 flex-shrink-0">
+      <div
+        className="w-full flex items-center justify-between pb-2 flex-shrink-0 z-20"
+        style={{ paddingTop: 'calc(var(--mobile-top-padding, 52px) + 4px)' }}
+      >
         <GlassIconButton
           onClick={onBack}
           ariaLabel="Назад"

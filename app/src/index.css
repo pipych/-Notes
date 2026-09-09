@@ -7,6 +7,11 @@
 :root {
   color-scheme: dark;
   --bg-app: #131314;
+  --tg-safe-top: var(--tg-content-safe-area-inset-top, var(--tg-safe-area-inset-top, 0px));
+  --tg-safe-bottom: var(--tg-content-safe-area-inset-bottom, var(--tg-safe-area-inset-bottom, 0px));
+  /* Mobile top inset to prevent Telegram header, close buttons, or notch from overlapping */
+  --mobile-top-padding: max(var(--tg-content-safe-area-inset-top, 0px), calc(env(safe-area-inset-top, 0px) + 52px));
+  --mobile-bottom-inset: max(var(--tg-content-safe-area-inset-bottom, 0px), env(safe-area-inset-bottom, 0px), 12px);
 }
 
 html, body {
@@ -14,6 +19,7 @@ html, body {
   padding: 0;
   width: 100%;
   height: 100%;
+  min-height: 100%;
   background-color: #131314;
   color: #E3E3E3;
   font-family: 'Nunito', sans-serif;
@@ -26,6 +32,7 @@ html, body {
 
 #root {
   width: 100%;
+  height: 100%;
   min-height: 100%;
   display: flex;
   flex-direction: column;
@@ -52,5 +59,5 @@ html, body {
 
 /* Telegram WebApp adjustments */
 body.in-tg {
-  padding-top: env(safe-area-inset-top, 0px);
+  /* Dynamic insets handled via scoped mobile containers and CSS variables */
 }

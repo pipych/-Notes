@@ -59,19 +59,28 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
   const hasPendingInvites = pendingInvitations.length > 0 && currentTab !== 'search';
 
   return (
-    <div className="relative w-full h-full min-h-screen bg-m3-bg flex flex-col overflow-hidden select-none">
-      {/* Top Fading Scrim Gradient */}
-      {currentTab !== 'search' && (
-        <div
-          className="pointer-events-none absolute top-0 inset-x-0 h-[90px] z-10"
-          style={{
-            background: 'linear-gradient(to bottom, #131314 0%, rgba(19, 19, 20, 0.85) 45%, rgba(19, 19, 20, 0.35) 75%, transparent 100%)',
-          }}
-        />
-      )}
+    <div className="relative w-full h-[100dvh] bg-m3-bg flex flex-col overflow-hidden select-none">
+      {/* Pinned Top Bar (safe below Telegram header and notch) */}
+      <div
+        className="w-full flex items-center justify-between px-4 pb-2 z-30 flex-shrink-0 bg-m3-bg/85 backdrop-blur-md"
+        style={{ paddingTop: 'calc(var(--mobile-top-padding, 52px) + 4px)' }}
+      >
+        {currentTab === 'search' ? (
+          <div className="flex-1 mr-3">
+            <GlassSearchBar
+              query={searchQuery}
+              onQueryChange={onSearchQueryChange}
+              placeholderText="Поиск по трекам и наброскам..."
+            />
+          </div>
+        ) : (
+          <div className="flex-1">
+            <span className="font-nunito font-extrabold text-[26px] text-m3-on-background tracking-tight">
+              {currentTab === 'tracks' ? 'Треки' : 'Наброски'}
+            </span>
+          </div>
+        )}
 
-      {/* Floating Profile Button (pinned top-right) */}
-      <div className="absolute top-3 right-4 z-20">
         <GlassIconButton
           onClick={onOpenProfile}
           ariaLabel="Профиль"
@@ -84,21 +93,13 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 w-full flex flex-col overflow-y-auto px-4 pt-3 pb-32">
-        {/* Search Tab Top Input */}
-        {currentTab === 'search' && (
-          <div className="w-full pr-14 mb-3 z-10">
-            <GlassSearchBar
-              query={searchQuery}
-              onQueryChange={onSearchQueryChange}
-              placeholderText="Поиск по трекам и наброскам..."
-            />
-          </div>
-        )}
-
+      <div
+        className="flex-1 w-full flex flex-col overflow-y-auto px-4 pt-2"
+        style={{ paddingBottom: 'calc(var(--mobile-bottom-inset, 12px) + 150px)' }}
+      >
         {/* Pinned Incoming Invitations Banner */}
         {hasPendingInvites && (
-          <div className="mb-4 pt-12">
+          <div className="mb-3">
             <InvitationsBanner
               invitations={pendingInvitations}
               onAccept={onAcceptInvitation}
@@ -140,7 +141,7 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
                 </div>
               </div>
             ) : (
-              <div className={hasPendingInvites ? '' : 'pt-10'}>
+              <div className="pt-1">
                 {grouped.map((group, groupIdx) => (
                   <div key={group.category.name} className="mb-2">
                     <div
@@ -199,7 +200,7 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
                 </div>
               </div>
             ) : (
-              <div className={hasPendingInvites ? '' : 'pt-10'}>
+              <div className="pt-1">
                 {grouped.map((group, groupIdx) => (
                   <div key={group.category.name} className="mb-2">
                     <div
@@ -288,29 +289,46 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
       </div>
 
       {/* Bottom Fading Scrim Gradient */}
-      <div
-        className="pointer-events-none absolute bottom-0 inset-x-0 h-[130px] z-10"
-        style={{
-          background: 'linear-gradient(to top, #131314 0%, rgba(19, 19, 20, 0.9) 40%, rgba(19, 19, 20, 0.45) 75%, transparent 100%)',
-        }}
-      />
-
-      {/* Pulsing FAB (only on Tracks and Drafts) */}
-      {currentTab !== 'search' && (
-        <div className="absolute bottom-[86px] right-5 z-20">
-          <PulsingFab
-            onClick={() => onNewNote(currentTab === 'drafts')}
-            isPulsing={totalCountInTab === 0}
-          />
-        </div>
-      )}
-
-      {/* Floating Bottom Nav Bar */}
-      <div className="absolute bottom-2.5 inset-x-0 flex justify-center z-20">
-        <FloatingNavBar
-          selectedTab={currentTab}
-          onTabSelected={onTabChange}
+      <div className="pointer-events-none fixed bottom-0 inset-x-0 h-[140px] z-30 flex justify-center">
+        <div
+          className="w-full max-w-md h-full"
+          style={{
+            background: 'linear-gradient(to top, #131314 0%, rgba(19, 19, 20, 0.92) 40%, rgba(19, 19, 20, 0.45) 75%, transparent 100%)',
+          }}
         />
+      </div>
+
+      {/* Floating Bottom Nav Bar & Pulsing FAB (always pinned on top of everything) */}
+      <div className="fixed bottom-0 inset-x-0 z-40 pointer-events-none flex justify-center">
+        <div className="w-full max-w-md relative h-0">
+          {/* Pulsing FAB (only on Tracks and Drafts) */}
+          {currentTab !== 'search' && (
+            <div
+              className="pointer-events-auto absolute right-5 transition-transform active:scale-95"
+              style={{
+                bottom: 'calc(var(--mobile-bottom-inset, 12px) + 76px)',
+              }}
+            >
+              <PulsingFab
+                onClick={() => onNewNote(currentTab === 'drafts')}
+                isPulsing={totalCountInTab === 0}
+              />
+            </div>
+          )}
+
+          {/* Floating Bottom Nav Bar */}
+          <div
+            className="pointer-events-auto absolute inset-x-0 flex justify-center"
+            style={{
+              bottom: 'var(--mobile-bottom-inset, 12px)',
+            }}
+          >
+            <FloatingNavBar
+              selectedTab={currentTab}
+              onTabSelected={onTabChange}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

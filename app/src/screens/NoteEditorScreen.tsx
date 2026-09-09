@@ -126,9 +126,12 @@ export const NoteEditorScreen: React.FC<NoteEditorScreenProps> = ({
   const isShared = Boolean(note?.is_shared || collaborators.length > 0);
 
   return (
-    <div className="relative w-full h-full min-h-screen bg-m3-bg flex flex-col overflow-hidden select-none">
+    <div className="relative w-full h-[100dvh] bg-m3-bg flex flex-col overflow-hidden select-none">
       {/* Top Action Bar (Pinned) */}
-      <div className="w-full flex items-center justify-between px-4 py-3 z-30 flex-shrink-0 bg-m3-bg/80 backdrop-blur-md">
+      <div
+        className="w-full flex items-center justify-between px-4 pb-3 z-30 flex-shrink-0 bg-m3-bg/85 backdrop-blur-md"
+        style={{ paddingTop: 'calc(var(--mobile-top-padding, 52px) + 4px)' }}
+      >
         <GlassIconButton
           onClick={onBack}
           ariaLabel="Назад"
@@ -219,7 +222,10 @@ export const NoteEditorScreen: React.FC<NoteEditorScreenProps> = ({
       </div>
 
       {/* Bottom Floating Bar */}
-      <div className="absolute bottom-3 left-4 z-30 select-none">
+      <div
+        className="absolute left-4 z-30 select-none"
+        style={{ bottom: 'var(--mobile-bottom-inset, 12px)' }}
+      >
         <button
           onClick={() => setIsAiSplitOpen(!isAiSplitOpen)}
           className={`w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-95 focus:outline-none ${
