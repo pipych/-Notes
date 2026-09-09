@@ -3,12 +3,16 @@ import { Note, TabType, UserProfile, NoteCollaborator, NoteInvitation, RhymeMess
 import { supabase, supabaseFetch } from './services/supabase';
 import { checkTelegramUser, getOrCreateProfileFromSession, signInWithGoogle, linkGoogleAccount, signOutUser } from './services/auth';
 import { fetchAiRhymes } from './services/ai';
+import { useMediaQuery } from './hooks/useMediaQuery';
 import { AuthScreen } from './screens/AuthScreen';
 import { NotesListScreen } from './screens/NotesListScreen';
 import { NoteEditorScreen } from './screens/NoteEditorScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
+import { DesktopWorkspace } from './screens/DesktopWorkspace';
 
 export const App: React.FC = () => {
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [currentScreen, setCurrentScreen] = useState<'list' | 'editor' | 'profile'>('list');
@@ -138,10 +142,15 @@ export const App: React.FC = () => {
       });
 
       setNotes(merged);
+
+      // On desktop: if no note is selected and notes exist, select the first note
+      if (isDesktop && !currentNoteIdRef.current && merged.length > 0) {
+        setCurrentNoteId(merged[0].id);
+      }
     } catch (err) {
       console.error('loadNotes error:', err);
     }
-  }, []);
+  }, [isDesktop]);
 
   // ─── Authentication Init ─────────────────────────────────────────────
   useEffect(() => {
@@ -161,7 +170,6 @@ export const App: React.FC = () => {
           const profile = await getOrCreateProfileFromSession(session);
           setCurrentUser(profile);
 
-          // Clean URL hash if returning from OAuth
           if (window.location.hash || window.location.search.includes('code=')) {
             window.history.replaceState({}, document.title, window.location.pathname);
           }
@@ -180,7 +188,6 @@ export const App: React.FC = () => {
         const profile = await getOrCreateProfileFromSession(session);
         setCurrentUser(profile);
       } else {
-        // If not telegram user
         if (!document.body.classList.contains('in-tg')) {
           setCurrentUser(null);
         }
@@ -208,7 +215,7 @@ export const App: React.FC = () => {
 
   // ─── Active Note Real-time Collaboration Polling (every 4s) ──────────
   useEffect(() => {
-    if (currentScreen !== 'editor' || !currentNoteId || !currentUser || currentUser.is_guest) {
+    if ((!isDesktop && currentScreen !== 'editor') || !currentNoteId || !currentUser || currentUser.is_guest) {
       return;
     }
 
@@ -231,7 +238,7 @@ export const App: React.FC = () => {
     }, 4000);
 
     return () => clearInterval(collabInterval);
-  }, [currentScreen, currentNoteId, currentUser]);
+  }, [isDesktop, currentScreen, currentNoteId, currentUser]);
 
   // ─── Collaboration Data for Modal ────────────────────────────────────
   const loadCollabData = useCallback(async () => {
@@ -249,7 +256,6 @@ export const App: React.FC = () => {
       setAvailableUsers(users || []);
       setSentInvitations(invites || []);
 
-      // Populate collaborator profiles
       const enrichedCollabs = (collabs || []).map((c) => {
         const profile = (users || []).find((u) => u.id === c.user_id || u.auth_id === c.user_id);
         return {
@@ -275,7 +281,6 @@ export const App: React.FC = () => {
 
     try {
       if (!user || user.is_guest) {
-        // Local/guest saving
         if (!currentNoteId) {
           const newId = 'local_' + Date.now();
           setCurrentNoteId(newId);
@@ -296,7 +301,6 @@ export const App: React.FC = () => {
           );
         }
       } else {
-        // Supabase saving
         if (!currentNoteId) {
           const created = await supabaseFetch<Note[]>('/notes', {
             method: 'POST',
@@ -337,8 +341,8 @@ export const App: React.FC = () => {
   };
 
   // ─── Note Deletion ───────────────────────────────────────────────────
-  const handleDeleteNote = async () => {
-    const id = currentNoteId;
+  const handleDeleteNote = async (idToDelete?: string) => {
+    const id = idToDelete || currentNoteId;
     if (!id) {
       setCurrentScreen('list');
       return;
@@ -347,23 +351,30 @@ export const App: React.FC = () => {
     const note = notes.find((n) => n.id === id);
     const user = currentUserRef.current;
 
-    setNotes((prev) => prev.filter((n) => n.id !== id));
-    setCurrentScreen('list');
-    setCurrentNoteId(null);
+    const remaining = notes.filter((n) => n.id !== id);
+    setNotes(remaining);
+
+    if (currentNoteId === id) {
+      if (isDesktop && remaining.length > 0) {
+        setCurrentNoteId(remaining[0].id);
+      } else {
+        setCurrentNoteId(null);
+        setCurrentScreen('list');
+      }
+    }
+
     localStorage.removeItem('bars_chat_' + id);
 
     if (user && !user.is_guest && note) {
       try {
         const isOwner = !note.is_shared || note.user_id === user.id || (user.auth_id && note.user_id === user.auth_id);
         if (!isOwner) {
-          // Remove self from collaborators
           const userIds = [user.id];
           if (user.auth_id) userIds.push(user.auth_id);
           await supabaseFetch(`/note_collaborators?note_id=eq.${id}&user_id=in.(${userIds.join(',')})`, {
             method: 'DELETE',
           });
         } else {
-          // Hard delete note and references
           await supabaseFetch(`/notes?id=eq.${id}`, { method: 'DELETE' });
           await supabaseFetch(`/note_collaborators?note_id=eq.${id}`, { method: 'DELETE' }).catch(() => {});
           await supabaseFetch(`/note_invitations?note_id=eq.${id}`, { method: 'DELETE' }).catch(() => {});
@@ -548,6 +559,44 @@ export const App: React.FC = () => {
 
   const activeNote = notes.find((n) => n.id === currentNoteId) || null;
 
+  // ─── 🖥️ DESKTOP WORKSPACE (Apple Notes UX + Material 3 Expressive) ──
+  if (isDesktop) {
+    return (
+      <DesktopWorkspace
+        notes={notes}
+        currentUser={currentUser}
+        currentNoteId={currentNoteId}
+        onSelectNote={(id) => openNoteEditor(id || undefined)}
+        onNewNote={(_isDraft) => openNoteEditor()}
+        onSaveNote={handleSaveNote}
+        onDeleteNote={handleDeleteNote}
+        saveState={saveState}
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+        pendingInvitations={pendingInvitations}
+        onAcceptInvitation={handleAcceptInvitation}
+        onDeclineInvitation={handleDeclineInvitation}
+        collaborators={collaborators}
+        sentInvitations={sentInvitations}
+        availableUsers={availableUsers}
+        isCollabLoading={isCollabLoading}
+        onInviteUser={handleInviteUser}
+        onCancelInvite={handleCancelInvite}
+        onRemoveCollaborator={handleRemoveCollaborator}
+        onRefreshCollab={loadCollabData}
+        chatHistory={chatHistory}
+        isAiLoading={isAiLoading}
+        onSendAiQuery={handleSendAiQuery}
+        onLogout={async () => {
+          await signOutUser();
+          setCurrentUser(null);
+        }}
+        onLinkGoogle={() => linkGoogleAccount(currentUser.id)}
+      />
+    );
+  }
+
+  // ─── 📱 MOBILE / TABLET WORKSPACE (Android Native 1:1) ──────────────
   return (
     <div className="w-full h-full min-h-screen bg-m3-bg text-m3-on-background font-nunito flex flex-col items-center">
       <div className="w-full max-w-md h-full min-h-screen flex flex-col relative">
