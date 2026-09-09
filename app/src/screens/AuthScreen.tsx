@@ -25,6 +25,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onGoogleSignIn }) => {
       style={{ paddingTop: 'calc(var(--mobile-top-padding, 94px) + 10px)' }}
     >
       {/* App Logo */}
+      <img
+        src="/icon.png"
+        alt="Bars"
+        className="w-24 h-24 rounded-[26px] shadow-2xl mb-4 object-cover ring-1 ring-white/15"
+      />
       <h1 className="text-[54px] font-nunito font-extrabold text-m3-on-background tracking-[-1px]">
         Bars
       </h1>

@@ -75,7 +75,12 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
             />
           </div>
         ) : (
-          <div className="flex-1">
+          <div className="flex-1 flex items-center gap-2.5">
+            <img
+              src="/icon.png"
+              alt="Bars"
+              className="w-7 h-7 rounded-[8px] shadow-sm object-cover ring-1 ring-white/10"
+            />
             <span className="font-nunito font-extrabold text-[26px] text-m3-on-background tracking-tight">
               {currentTab === 'tracks' ? 'Треки' : 'Наброски'}
             </span>
