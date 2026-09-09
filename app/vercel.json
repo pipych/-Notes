@@ -1,0 +1,11 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/bars.apk", "destination": "/bars.apk" },
+    { "source": "/auth-callback.html", "destination": "/auth-callback.html" },
+    { "source": "/icon.png", "destination": "/icon.png" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

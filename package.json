@@ -1,10 +1,10 @@
-{
+﻿{
   "name": "bars",
   "version": "1.0.0",
   "description": "Bars — заметки и треки",
-  "main": "app/index.html",
+  "main": "app/dist/index.html",
   "scripts": {
-    "build": "echo 'No build step needed'",
+    "build": "npm --prefix app install && npm --prefix app run build",
     "cap:add": "cap add android",
     "cap:sync": "cap sync",
     "cap:open": "cap open android"

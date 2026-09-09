@@ -1,0 +1,11 @@
+{
+  "buildCommand": "npm --prefix app install && npm --prefix app run build",
+  "outputDirectory": "app/dist",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/app/api/$1" },
+    { "source": "/bars.apk", "destination": "/bars.apk" },
+    { "source": "/auth-callback.html", "destination": "/auth-callback.html" },
+    { "source": "/icon.png", "destination": "/icon.png" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
