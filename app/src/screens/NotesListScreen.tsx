@@ -63,7 +63,7 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
       {/* Pinned Top Bar (safe below Telegram header and notch) */}
       <div
         className="w-full flex items-center justify-between px-4 pb-2 z-30 flex-shrink-0 bg-m3-bg/85 backdrop-blur-md"
-        style={{ paddingTop: 'calc(var(--mobile-top-padding, 52px) + 4px)' }}
+        style={{ paddingTop: 'calc(var(--mobile-top-padding, 76px) + 8px)' }}
       >
         {currentTab === 'search' ? (
           <div className="flex-1 mr-3">
@@ -95,7 +95,7 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
       {/* Main Content Area */}
       <div
         className="flex-1 w-full flex flex-col overflow-y-auto px-4 pt-2"
-        style={{ paddingBottom: 'calc(var(--mobile-bottom-inset, 12px) + 150px)' }}
+        style={{ paddingBottom: 'calc(var(--mobile-bottom-inset, 32px) + 160px)' }}
       >
         {/* Pinned Incoming Invitations Banner */}
         {hasPendingInvites && (
@@ -289,11 +289,11 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
       </div>
 
       {/* Bottom Fading Scrim Gradient */}
-      <div className="pointer-events-none fixed bottom-0 inset-x-0 h-[140px] z-30 flex justify-center">
+      <div className="pointer-events-none fixed bottom-0 inset-x-0 h-[190px] z-30 flex justify-center">
         <div
           className="w-full max-w-md h-full"
           style={{
-            background: 'linear-gradient(to top, #131314 0%, rgba(19, 19, 20, 0.92) 40%, rgba(19, 19, 20, 0.45) 75%, transparent 100%)',
+            background: 'linear-gradient(to top, #131314 0%, rgba(19, 19, 20, 0.94) 40%, rgba(19, 19, 20, 0.45) 75%, transparent 100%)',
           }}
         />
       </div>
@@ -306,7 +306,7 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
             <div
               className="pointer-events-auto absolute right-5 transition-transform active:scale-95"
               style={{
-                bottom: 'calc(var(--mobile-bottom-inset, 12px) + 76px)',
+                bottom: 'calc(var(--mobile-bottom-inset, 32px) + 78px)',
               }}
             >
               <PulsingFab
@@ -320,7 +320,7 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
           <div
             className="pointer-events-auto absolute inset-x-0 flex justify-center"
             style={{
-              bottom: 'var(--mobile-bottom-inset, 12px)',
+              bottom: 'var(--mobile-bottom-inset, 32px)',
             }}
           >
             <FloatingNavBar

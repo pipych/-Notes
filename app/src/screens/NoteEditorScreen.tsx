@@ -130,7 +130,7 @@ export const NoteEditorScreen: React.FC<NoteEditorScreenProps> = ({
       {/* Top Action Bar (Pinned) */}
       <div
         className="w-full flex items-center justify-between px-4 pb-3 z-30 flex-shrink-0 bg-m3-bg/85 backdrop-blur-md"
-        style={{ paddingTop: 'calc(var(--mobile-top-padding, 52px) + 4px)' }}
+        style={{ paddingTop: 'calc(var(--mobile-top-padding, 76px) + 8px)' }}
       >
         <GlassIconButton
           onClick={onBack}
@@ -180,7 +180,10 @@ export const NoteEditorScreen: React.FC<NoteEditorScreenProps> = ({
       </div>
 
       {/* Main Section */}
-      <div className="flex-1 w-full flex flex-col overflow-hidden px-4 pb-16">
+      <div
+        className="flex-1 w-full flex flex-col overflow-hidden px-4"
+        style={{ paddingBottom: 'calc(var(--mobile-bottom-inset, 32px) + 56px)' }}
+      >
         {/* Editor Inputs */}
         <div
           className={`w-full flex flex-col transition-all duration-300 ${
@@ -224,7 +227,7 @@ export const NoteEditorScreen: React.FC<NoteEditorScreenProps> = ({
       {/* Bottom Floating Bar */}
       <div
         className="absolute left-4 z-30 select-none"
-        style={{ bottom: 'var(--mobile-bottom-inset, 12px)' }}
+        style={{ bottom: 'var(--mobile-bottom-inset, 32px)' }}
       >
         <button
           onClick={() => setIsAiSplitOpen(!isAiSplitOpen)}
