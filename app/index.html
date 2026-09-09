@@ -1388,7 +1388,21 @@
         notes = raw ? JSON.parse(raw) : [];
       } else {
         try {
-          notes = await supabaseFetch(`/notes?user_id=eq.${currentUser.id}&order=updated_at.desc&select=*`) || [];
+          const ownNotes = await supabaseFetch(`/notes?user_id=eq.${currentUser.id}&order=updated_at.desc&select=*`) || [];
+          let sharedNotes = [];
+          try {
+            const collabs = await supabaseFetch(`/note_collaborators?user_id=eq.${currentUser.id}&select=note_id`) || [];
+            const noteIds = collabs.map(c => c.note_id).filter(Boolean);
+            if (noteIds.length > 0) {
+              sharedNotes = await supabaseFetch(`/notes?id=in.(${noteIds.join(',')})&order=updated_at.desc&select=*`) || [];
+              sharedNotes.forEach(n => n.is_shared = true);
+            }
+          } catch (e) {
+            // Collaborators table not yet queried or empty
+          }
+          const allMap = new Map();
+          [...ownNotes, ...sharedNotes].forEach(n => allMap.set(n.id, n));
+          notes = Array.from(allMap.values()).sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0));
         } catch (e) {
           console.error(e);
         }
