@@ -8,6 +8,7 @@ import { AiRhymesPanel } from './AiRhymesPanel';
 import { CollaboratorsSheet } from './CollaboratorsSheet';
 import { ProfileScreen } from './ProfileScreen';
 import { MaterialIcon } from '../components/MaterialIcon';
+import { shareNote } from '../utils/share';
 
 interface DesktopWorkspaceProps {
   notes: Note[];
@@ -75,11 +76,20 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
   const [showCollabModal, setShowCollabModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showToast, setShowToast] = useState<string | null>(null);
 
   // Editor states
   const activeNote = notes.find((n) => n.id === currentNoteId) || null;
   const [title, setTitle] = useState(activeNote?.title || '');
   const [content, setContent] = useState(activeNote?.content || '');
+
+  const handleShare = async () => {
+    const res = await shareNote(title, content);
+    if (res.copied) {
+      setShowToast('Скопировано в буфер обмена');
+      setTimeout(() => setShowToast(null), 2500);
+    }
+  };
 
   const titleRef = useRef(title);
   const contentRef = useRef(content);
@@ -477,6 +487,16 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
 
                 {/* Right Action Buttons */}
                 <div className="flex items-center gap-3">
+                  {/* Share Button */}
+                  <button
+                    onClick={handleShare}
+                    className="h-10 px-3.5 rounded-full flex items-center gap-2 bg-m3-surface-container-high text-m3-on-surface hover:bg-m3-surface-container-highest font-medium transition-all focus:outline-none"
+                    title="Поделиться заметкой"
+                  >
+                    <MaterialIcon name="share" size={18} />
+                    <span className="font-nunito text-[13px]">Поделиться</span>
+                  </button>
+
                   {/* Collaborators Button */}
                   <button
                     onClick={() => {
@@ -664,6 +684,14 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {showToast && (
+        <div className="fixed top-6 right-6 z-50 bg-m3-surface-container-highest text-m3-on-surface px-4 py-2.5 rounded-full shadow-2xl text-[14px] font-nunito font-semibold flex items-center gap-2.5 border border-m3-outline-variant/30 animate-fade-in">
+          <MaterialIcon name="check_circle" size={20} className="text-m3-primary" />
+          <span>{showToast}</span>
         </div>
       )}
     </div>

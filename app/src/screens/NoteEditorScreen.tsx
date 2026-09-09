@@ -4,6 +4,7 @@ import { SaveStatusIndicator } from '../components/SaveStatusIndicator';
 import { GlassIconButton } from '../components/GlassIconButton';
 import { BottomSheet } from '../components/BottomSheet';
 import { MaterialIcon } from '../components/MaterialIcon';
+import { shareNote } from '../utils/share';
 import { AiRhymesPanel } from './AiRhymesPanel';
 import { CollaboratorsSheet } from './CollaboratorsSheet';
 
@@ -54,6 +55,15 @@ export const NoteEditorScreen: React.FC<NoteEditorScreenProps> = ({
   const [showMoreSheet, setShowMoreSheet] = useState(false);
   const [showCollabSheet, setShowCollabSheet] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showToast, setShowToast] = useState<string | null>(null);
+
+  const handleShare = async () => {
+    const res = await shareNote(title, content);
+    if (res.copied) {
+      setShowToast('Скопировано в буфер обмена');
+      setTimeout(() => setShowToast(null), 2500);
+    }
+  };
 
   const titleRef = useRef(title);
   const contentRef = useRef(content);
@@ -140,6 +150,13 @@ export const NoteEditorScreen: React.FC<NoteEditorScreenProps> = ({
         />
 
         <div className="flex items-center gap-2">
+          {/* Share Button */}
+          <GlassIconButton
+            onClick={handleShare}
+            ariaLabel="Поделиться"
+            icon={<MaterialIcon name="share" size={22} />}
+          />
+
           {isShared && (
             <GlassIconButton
               onClick={() => {
@@ -231,6 +248,27 @@ export const NoteEditorScreen: React.FC<NoteEditorScreenProps> = ({
           <div className="font-nunito font-bold text-[18px] text-m3-on-surface px-1 mb-1">
             Опции
           </div>
+
+          {/* Option: Share */}
+          <button
+            onClick={() => {
+              setShowMoreSheet(false);
+              handleShare();
+            }}
+            className="w-full rounded-[18px] bg-m3-surface-container-high p-4 flex items-center gap-3.5 text-left active:bg-m3-surface-container-highest transition-colors focus:outline-none"
+          >
+            <div className="w-10 h-10 rounded-full bg-m3-primary-container/50 text-m3-primary flex items-center justify-center flex-shrink-0">
+              <MaterialIcon name="share" size={22} />
+            </div>
+            <div>
+              <div className="font-nunito font-bold text-[15px] text-m3-on-surface leading-5">
+                Поделиться
+              </div>
+              <div className="font-nunito text-[12px] text-m3-on-surface-variant">
+                Отправить копию текста заметки
+              </div>
+            </div>
+          </button>
 
           {/* Option: Collaboration */}
           <button
@@ -325,6 +363,14 @@ export const NoteEditorScreen: React.FC<NoteEditorScreenProps> = ({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {showToast && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-m3-surface-container-highest text-m3-on-surface px-4 py-2 rounded-full shadow-lg text-[13px] font-nunito font-semibold flex items-center gap-2 border border-m3-outline-variant/30">
+          <MaterialIcon name="check_circle" size={18} className="text-m3-primary" />
+          <span>{showToast}</span>
         </div>
       )}
     </div>
