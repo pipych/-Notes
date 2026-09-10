@@ -215,14 +215,9 @@ export const DesktopWorkspace: React.FC<DesktopWorkspaceProps> = ({
         {/* Sidebar Header */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-m3-outline-variant/15 flex-shrink-0">
           {isSidebarExpanded ? (
-            <div className="flex items-center gap-2.5">
-              <span className="font-nunito font-extrabold text-[22px] text-m3-on-surface tracking-tight">
-                Bars
-              </span>
-              <span className="text-[11px] font-nunito font-bold px-2 py-0.5 rounded-full bg-m3-primary-container text-m3-on-primary-container">
-                Pro
-              </span>
-            </div>
+            <span className="font-nunito font-extrabold text-[22px] text-m3-on-surface tracking-tight">
+              Bars
+            </span>
           ) : null}
 
           {/* Toggle Sidebar Button */}

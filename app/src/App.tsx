@@ -265,6 +265,22 @@ export const App: React.FC = () => {
     }
   }, [currentScreen]);
 
+  // ─── Telegram WebApp Auto-fullscreen on any device ──────────────────
+  useEffect(() => {
+    const tg = (window as any).Telegram?.WebApp;
+    if (!tg) return;
+    try {
+      tg.ready();
+      tg.expand();
+      if (typeof tg.requestFullscreen === 'function' && !tg.isFullscreen) {
+        tg.requestFullscreen();
+      }
+      if (typeof tg.disableVerticalSwipes === 'function') {
+        tg.disableVerticalSwipes();
+      }
+    } catch {}
+  }, [currentScreen]);
+
   // ─── Collaboration Data for Modal ────────────────────────────────────
   const loadCollabData = useCallback(async () => {
     const noteId = currentNoteIdRef.current;
