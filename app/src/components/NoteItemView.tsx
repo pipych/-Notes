@@ -18,7 +18,6 @@ export const NoteItemView: React.FC<NoteItemViewProps> = ({
 }) => {
   const [translateX, setTranslateX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const startXRef = useRef(0);
   const startYRef = useRef(0);
   const isHorizontalSwipeRef = useRef(false);
@@ -73,12 +72,9 @@ export const NoteItemView: React.FC<NoteItemViewProps> = ({
     setIsDragging(false);
 
     if (translateX < -75) {
-      // Confirmed dismiss
-      setIsDeleting(true);
-      setTranslateX(-400);
-      setTimeout(() => {
-        onDelete();
-      }, 320);
+      // Trigger confirmation dialog and snap card back smoothly
+      setTranslateX(0);
+      onDelete();
     } else {
       // Snap back
       setTranslateX(0);
@@ -95,9 +91,7 @@ export const NoteItemView: React.FC<NoteItemViewProps> = ({
 
   return (
     <div
-      className={`relative overflow-hidden mb-[3px] select-none transition-all duration-300 ${shapeClass} ${
-        isDeleting ? 'max-h-0 opacity-0 my-0 mb-0' : 'max-h-36 opacity-100'
-      }`}
+      className={`relative overflow-hidden mb-[3px] select-none transition-all duration-300 ${shapeClass} max-h-36 opacity-100`}
     >
       {/* Red Delete Background */}
       <div

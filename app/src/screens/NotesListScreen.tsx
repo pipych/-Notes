@@ -40,6 +40,8 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
   onDeclineInvitation,
 }) => {
   // Filter notes according to current tab
+  const [noteToDelete, setNoteToDelete] = React.useState<Note | null>(null);
+
   const tracks = notes.filter((n) => n.title && n.title.trim().length > 0);
   const drafts = notes.filter((n) => !n.title || n.title.trim().length === 0);
 
@@ -140,7 +142,7 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
                         note={note}
                         shapeClass={getGroupItemShapeStyle(idx, group.notes.length)}
                         onClick={() => onOpenNote(note.id)}
-                        onDelete={() => onDeleteNote(note.id)}
+                        onDelete={() => setNoteToDelete(note)}
                       />
                     ))}
                   </div>
@@ -184,7 +186,7 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
                         note={note}
                         shapeClass={getGroupItemShapeStyle(idx, group.notes.length)}
                         onClick={() => onOpenNote(note.id)}
-                        onDelete={() => onDeleteNote(note.id)}
+                        onDelete={() => setNoteToDelete(note)}
                       />
                     ))}
                   </div>
@@ -233,7 +235,7 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
                         note={note}
                         shapeClass={getGroupItemShapeStyle(idx, group.notes.length)}
                         onClick={() => onOpenNote(note.id)}
-                        onDelete={() => onDeleteNote(note.id)}
+                        onDelete={() => setNoteToDelete(note)}
                       />
                     ))}
                   </div>
@@ -243,6 +245,42 @@ export const NotesListScreen: React.FC<NotesListScreenProps> = ({
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal Overlay */}
+      {noteToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            onClick={() => setNoteToDelete(null)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+          />
+          <div className="relative z-10 w-full max-w-sm rounded-[24px] bg-m3-surface-container-high p-6 shadow-2xl flex flex-col gap-3 border border-m3-outline-variant/30 animate-fade-in">
+            <div className="font-nunito font-bold text-[18px] text-m3-on-surface">
+              {noteToDelete.title ? `Удалить «${noteToDelete.title}»?` : 'Удалить этот набросок?'}
+            </div>
+            <div className="font-nunito text-[14px] text-m3-on-surface-variant leading-5">
+              Это действие нельзя будет отменить. Заметка будет удалена навсегда.
+            </div>
+            <div className="flex items-center justify-end gap-2 mt-3">
+              <button
+                onClick={() => setNoteToDelete(null)}
+                className="px-4 py-2 rounded-full text-m3-on-surface font-nunito font-medium text-[14px] hover:bg-white/5 active:scale-95 transition-all focus:outline-none"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={() => {
+                  const id = noteToDelete.id;
+                  setNoteToDelete(null);
+                  onDeleteNote(id);
+                }}
+                className="px-4 py-2 rounded-full bg-m3-error-container text-m3-error font-nunito font-bold text-[14px] active:scale-95 transition-transform focus:outline-none"
+              >
+                Удалить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Fading Scrim Gradient */}
       <div className="pointer-events-none fixed bottom-0 inset-x-0 h-[190px] z-30 flex justify-center">
