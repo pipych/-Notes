@@ -17,6 +17,7 @@ export async function signInWithGoogle() {
 
 export async function linkGoogleAccount(currentUserId: string) {
   sessionStorage.setItem('bars_linking_profile_id', currentUserId);
+  localStorage.setItem('bars_linking_profile_id', currentUserId);
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -25,6 +26,7 @@ export async function linkGoogleAccount(currentUserId: string) {
   });
   if (error) {
     sessionStorage.removeItem('bars_linking_profile_id');
+    localStorage.removeItem('bars_linking_profile_id');
     throw error;
   }
 }
@@ -33,9 +35,10 @@ export async function getOrCreateProfileFromSession(session: any): Promise<UserP
   const authUser = session?.user;
   if (!authUser) throw new Error('No user in session');
 
-  const linkingProfileId = sessionStorage.getItem('bars_linking_profile_id');
+  const linkingProfileId = sessionStorage.getItem('bars_linking_profile_id') || localStorage.getItem('bars_linking_profile_id');
   if (linkingProfileId) {
     sessionStorage.removeItem('bars_linking_profile_id');
+    localStorage.removeItem('bars_linking_profile_id');
     try {
       const updated = await supabaseFetch<UserProfile[]>(`/profiles?id=eq.${linkingProfileId}`, {
         method: 'PATCH',
