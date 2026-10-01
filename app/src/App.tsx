@@ -437,7 +437,7 @@ export const App: React.FC = () => {
         body: JSON.stringify({ status: 'accepted', updated_at: new Date().toISOString() }),
       });
 
-      await supabaseFetch('/note_collaborators', {
+      await supabaseFetch('/note_collaborators?on_conflict=note_id,user_id', {
         method: 'POST',
         headers: { 'Prefer': 'resolution=merge-duplicates' },
         body: JSON.stringify({
@@ -475,7 +475,7 @@ export const App: React.FC = () => {
     const inviterName = currentUser.first_name || (currentUser.username ? `@${currentUser.username}` : '') || currentUser.google_email || 'Пользователь';
 
     try {
-      await supabaseFetch('/note_invitations', {
+      await supabaseFetch('/note_invitations?on_conflict=note_id,invitee_id', {
         method: 'POST',
         headers: { 'Prefer': 'resolution=merge-duplicates' },
         body: JSON.stringify({
