@@ -214,31 +214,60 @@ export const App: React.FC = () => {
     }
   }, [currentUser, loadNotes, fetchPendingInvitations]);
 
-  // ─── Active Note Real-time Collaboration Polling (every 4s) ──────────
+  // ─── Active Note Real-time Collaboration (Supabase Realtime Channel + 3s Polling Fallback) ──
   useEffect(() => {
     if ((!isDesktop && currentScreen !== 'editor') || !currentNoteId || !currentUser || currentUser.is_guest) {
       return;
     }
 
+    const applyRemoteNote = (remote: Note) => {
+      setNotes((prev) => {
+        const current = prev.find((n) => n.id === currentNoteId);
+        if (!current) return prev;
+        const remoteTime = new Date(remote.updated_at).getTime();
+        const currentTime = new Date(current.updated_at).getTime();
+        if (remoteTime > currentTime || (remote.title !== current.title || remote.content !== current.content)) {
+          return prev.map((n) => (n.id === currentNoteId ? { ...n, ...remote } : n));
+        }
+        return prev;
+      });
+    };
+
+    // 1. Supabase Realtime subscription for instantaneous sync
+    const channel = supabase
+      .channel(`note-collab-${currentNoteId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notes',
+          filter: `id=eq.${currentNoteId}`,
+        },
+        (payload) => {
+          if (payload.new) {
+            applyRemoteNote(payload.new as Note);
+          }
+        }
+      )
+      .subscribe();
+
+    // 2. Fallback polling every 3 seconds to guarantee updates even if websockets reconnect
     const collabInterval = setInterval(async () => {
       try {
         const updatedNotes = await supabaseFetch<Note[]>(`/notes?id=eq.${currentNoteId}&select=*`);
         if (updatedNotes && updatedNotes.length > 0) {
-          const remote = updatedNotes[0];
-          setNotes((prev) => {
-            const current = prev.find((n) => n.id === currentNoteId);
-            if (current && new Date(remote.updated_at).getTime() > new Date(current.updated_at).getTime()) {
-              return prev.map((n) => (n.id === currentNoteId ? { ...n, ...remote } : n));
-            }
-            return prev;
-          });
+          applyRemoteNote(updatedNotes[0]);
         }
       } catch {
         // quiet polling error
       }
-    }, 4000);
+    }, 3000);
 
-    return () => clearInterval(collabInterval);
+    return () => {
+      clearInterval(collabInterval);
+      supabase.removeChannel(channel);
+    };
   }, [isDesktop, currentScreen, currentNoteId, currentUser]);
 
   // ─── Telegram WebApp Native Back Button ─────────────────────────────
