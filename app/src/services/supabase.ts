@@ -41,5 +41,14 @@ export async function supabaseFetch<T = any>(path: string, options: RequestInit 
   }
 
   if (response.status === 204) return null as unknown as T;
-  return await response.json();
+  const text = await response.text();
+  if (!text || !text.trim()) {
+    return null as unknown as T;
+  }
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return null as unknown as T;
+  }
 }
+
